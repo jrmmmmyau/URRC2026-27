@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "std_msgs/msg/header.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
 #include "geometry_msgs/msg/point.hpp"
 #include "geometry_msgs/msg/quaternion.hpp"
 #include "geometry_msgs/msg/twist.hpp"
@@ -26,5 +27,8 @@ private:
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr
         drive_publisher_;
+
+    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr
+	    joint_state_publisher_;
 };
 }
