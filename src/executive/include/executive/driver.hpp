@@ -16,5 +16,15 @@ namespace executive {
 class Driver : public rclcpp::Node {
 public:
   Driver();
+
+private:
+    void cmd_vel_callback(
+        const geometry_msgs::msg::Twist::SharedPtr msg);
+
+    rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr
+        cmd_vel_subscription_;
+
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr
+        drive_publisher_;
 };
 }
