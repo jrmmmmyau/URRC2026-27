@@ -1,0 +1,22 @@
+# Build outputs
+build/
+install/
+log/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+
+# ROS 2 generated
+*.log
+colcon.meta
