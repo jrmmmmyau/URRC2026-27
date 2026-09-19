@@ -20,7 +20,7 @@ executive::Driver::Driver()
         "/drive_cmd_vel",
         10);
 
-    join_state_publiisher_ = this->create_publisher< sensor_msgs::msg::JointState >(
+    joint_state_publisher_ = this->create_publisher< sensor_msgs::msg::JointState >(
 		    "joint_states", 1);
 
     RCLCPP_INFO(this->get_logger(), "Driver node started");
@@ -79,6 +79,44 @@ void Driver::cmd_vel_callback(
     
     double br_speed = std::hypot(br_vx, br_vy); 
     double br_angle = std::atan2(br_vy, br_vx);
+
+    // convert linear module speed m/s to wheel rotational velocity rad/s
+    double wheelradius = 0.00557;
+    double fl_wheel_vel = fl_speed / wheelradius;
+    double fr_wheel_vel = fr_speed / wheelradius;
+    double bl_wheel_vel = bl_speed / wheelradius;
+    double br_wheel_vel = br_speed / wheelradius;
+
+    auto joint_msg = sensor_msgs::msg::JointState();
+    joint_msg.header.stamp = this->get_clock()->now();
+
+    joint_msg.name = {
+    "front_left_steering_joint", "front_right_steering_joint",
+    "rear_left_steering_joint", "rear_right_steering_joing",
+    "front_left_wheel_spin_joint", "front_right_wheel_spin_joint",
+    "rear_left_wheel_spin_joint", "rear_right_wheel_spin_joint"
+    };
+
+    // fill position array 
+    joint_msg.position = {
+        fl_angle, fr_angle, bl_angle, br_angle,
+        0.0, 0.0, 0.0, 0.0
+        };
+
+    // fill velocity array
+    joint_msg.velocity = {
+        0.0, 0.0, 0.0, 0.0,
+        fl_wheel_vel, fr_wheel_vel, bl_wheel_vel, br_wheel_vel
+        };
+
+    // publish joint msg
+    joint_state_publisher_->publish(joint_msg);
+   
+
+
+
+
+
 
     RCLCPP_INFO(this->get_logger(),
     "\nFL: [%.2f m/s, %.2f rad] | FR: [%.2f m/s, %.2f rad]\nRL: [%.2f m/s, %.2f rad] | RR: [%.2f m/s, %.2f rad]",
