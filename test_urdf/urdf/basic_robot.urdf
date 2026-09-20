@@ -48,9 +48,9 @@
     </collision>
     <inertial>
       <mass value="68.0"/>
-      <origin xyz="0,0,0" rpy="0,0,0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <inertia ixx="3.196" ixy="0.0" ixz="0.0" iyy="3.196" iyz="0.0" izz="6.38"/>
-    <intertial>
+    </inertial>
   </link>
 
 
@@ -75,9 +75,9 @@
     </collision>
     <inertial>
       <mass value="5.44"/>
-      <origin xyz="0,0,0" rpy="0,0,0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <inertia ixx="0.053" ixy="0.0" ixz="0.0" iyy="0.045" iyz="0.0" izz="0.112"/>
-    <intertial>
+    </inertial>
   </link>
 
   <joint name="base_to_deposition_joint" type="fixed">
@@ -109,9 +109,9 @@
     </collision>
     <inertial>
       <mass value="19.05"/>
-      <origin xyz="0,0,0" rpy="0,0,0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <inertia ixx="0.236" ixy="0.0" ixz="0.0" iyy="0.937" iyz="0.0" izz="0.714"/>
-    <intertial>
+    </inertial>
   </link>
 
   <joint name="base_to_extraction_joint" type="fixed">
@@ -135,6 +135,11 @@
       </geometry>
       <material name="silver"/>
     </visual>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="0 0 -0.11" rpy="0 0 0"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+    </inertial>
   </link>
 
   <joint name="front_left_steering_joint" type="revolute">
@@ -154,17 +159,17 @@
       </geometry>
       <material name="dark_gray"/>
     </visual>
-    </collision>
+    <collision>
       <origin xyz="0 0 0" rpy="1.5708 0 0"/>
-      </geometry>
+      <geometry>
         <cylinder radius="0.09" length="0.055"/>
       </geometry>
     </collision>
     <inertial>
       <mass value="1.54"/>
-      <origin xyz="0,0,0" rpy="1.5708,0,0"/>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
       <inertia ixx="0.0045" ixy="0.0" ixz="0.0" iyy="0.00557" iyz="0.0" izz="0.0067"/>
-    <intertial>
+    </inertial>
   </link>
 
   <joint name="front_left_wheel_spin_joint" type="continuous">
@@ -186,6 +191,11 @@
       </geometry>
       <material name="silver"/>
     </visual>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="0 0 -0.11" rpy="0 0 0"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+    </inertial>
   </link>
 
   <joint name="front_right_steering_joint" type="revolute">
@@ -205,17 +215,17 @@
       </geometry>
       <material name="dark_gray"/>
     </visual>
-    </collision>
+    <collision>
       <origin xyz="0 0 0" rpy="1.5708 0 0"/>
-      </geometry>
+      <geometry>
         <cylinder radius="0.09" length="0.055"/>
       </geometry>
     </collision>
     <inertial>
       <mass value="1.54"/>
-      <origin xyz="0,0,0" rpy="1.5708,0,0"/>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
       <inertia ixx="0.0045" ixy="0.0" ixz="0.0" iyy="0.00557" iyz="0.0" izz="0.0067"/>
-    <intertial>
+    </inertial>
   </link>
 
   <joint name="front_right_wheel_spin_joint" type="continuous">
@@ -237,6 +247,11 @@
       </geometry>
       <material name="silver"/>
     </visual>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="0 0 -0.11" rpy="0 0 0"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+    </inertial>
   </link>
 
   <joint name="rear_left_steering_joint" type="revolute">
@@ -256,17 +271,17 @@
       </geometry>
       <material name="dark_gray"/>
     </visual>
-    </collision>
+    <collision>
       <origin xyz="0 0 0" rpy="1.5708 0 0"/>
-      </geometry>
+      <geometry>
         <cylinder radius="0.09" length="0.055"/>
       </geometry>
     </collision>
     <inertial>
       <mass value="1.54"/>
-      <origin xyz="0,0,0" rpy="1.5708,0,0"/>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
       <inertia ixx="0.0045" ixy="0.0" ixz="0.0" iyy="0.00557" iyz="0.0" izz="0.0067"/>
-    <intertial>
+    </inertial>
   </link>
 
   <joint name="rear_left_wheel_spin_joint" type="continuous">
@@ -288,6 +303,11 @@
       </geometry>
       <material name="silver"/>
     </visual>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="0 0 -0.11" rpy="0 0 0"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+    </inertial>
   </link>
 
   <joint name="rear_right_steering_joint" type="revolute">
@@ -307,17 +327,17 @@
       </geometry>
       <material name="dark_gray"/>
     </visual>
-    </collision>
+    <collision>
       <origin xyz="0 0 0" rpy="1.5708 0 0"/>
-      </geometry>
+      <geometry>
         <cylinder radius="0.09" length="0.055"/>
       </geometry>
     </collision>
     <inertial>
       <mass value="1.54"/>
-      <origin xyz="0,0,0" rpy="1.5708,0,0"/>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
       <inertia ixx="0.0045" ixy="0.0" ixz="0.0" iyy="0.00557" iyz="0.0" izz="0.0067"/>
-    <intertial>
+    </inertial>
   </link>
 
   <joint name="rear_right_wheel_spin_joint" type="continuous">
