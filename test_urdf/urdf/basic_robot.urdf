@@ -84,7 +84,7 @@
     <parent link="base_link"/>
     <child link="deposition_system_link"/>
     <!-- rear = negative x -->
-    <origin xyz="-0.22 0 0.075" rpy="0 0 0"/>
+    <origin xyz="-0.22 0 0.0" rpy="0 0 0"/>
   </joint>
 
 
@@ -118,7 +118,7 @@
     <parent link="base_link"/>
     <child link="extraction_system_link"/>
     <!-- front = positive x -->
-    <origin xyz="0.22 0 0.075" rpy="0 0 0"/>
+    <origin xyz="0.22 0 0.0" rpy="0 0 0"/>
   </joint>
 
 
@@ -201,7 +201,7 @@
   <joint name="front_right_steering_joint" type="revolute">
     <parent link="base_link"/>
     <child link="front_right_steering_rod_link"/>
-    <origin xyz="0.32 -0.24 -0.075" rpy="0 0 0"/>
+    <origin xyz="0.32 -0.24 -0.0" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
     <limit lower="-1.5708" upper="1.5708" effort="20.0" velocity="2.0"/>
   </joint>
@@ -257,7 +257,7 @@
   <joint name="rear_left_steering_joint" type="revolute">
     <parent link="base_link"/>
     <child link="rear_left_steering_rod_link"/>
-    <origin xyz="-0.32 0.24 -0.075" rpy="0 0 0"/>
+    <origin xyz="-0.32 0.24 -0.0" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
     <limit lower="-1.5708" upper="1.5708" effort="20.0" velocity="2.0"/>
   </joint>
@@ -313,7 +313,7 @@
   <joint name="rear_right_steering_joint" type="revolute">
     <parent link="base_link"/>
     <child link="rear_right_steering_rod_link"/>
-    <origin xyz="-0.32 -0.24 -0.075" rpy="0 0 0"/>
+    <origin xyz="-0.32 -0.24 -0.0" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
     <limit lower="-1.5708" upper="1.5708" effort="20.0" velocity="2.0"/>
   </joint>
