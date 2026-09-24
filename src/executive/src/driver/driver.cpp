@@ -23,9 +23,42 @@ executive::Driver::Driver()
     joint_state_publisher_ = this->create_publisher< sensor_msgs::msg::JointState >(
 		    "joint_states", 1);
 
+    joint_state_subscriber_ = this->create_subscription<sensor_msgs::msg::JointState>(
+        "/joint_states",
+        10,
+        std::bind(
+        &Driver::joint_state_callback,
+        this,
+        std::placeholders::_1));
+
+
     RCLCPP_INFO(this->get_logger(), "Driver node started");
 }
 
+
+void Driver::joint_state_callback(
+    const sensor_msgs::msg::JointState::SharedPtr msg)
+{
+    for (size_t i = 0; i < msg->name.size(); ++i)
+    {
+        if (msg->name[i] == "front_left_steering_joint")
+        {
+            current_fl_angle_ = msg->position[i];
+        }
+        else if (msg->name[i] == "front_right_steering_joint")
+        {
+            current_fr_angle_ = msg->position[i];
+        }
+        else if (msg->name[i] == "rear_left_steering_joint")
+        {
+            current_bl_angle_ = msg->position[i];
+        }
+        else if (msg->name[i] == "rear_right_steering_joint")
+        {
+            current_br_angle_ = msg->position[i];
+        }
+    }
+}
 
 void Driver::cmd_vel_callback(
     const geometry_msgs::msg::Twist::SharedPtr msg)
@@ -42,7 +75,7 @@ void Driver::cmd_vel_callback(
 
     drive_publisher_->publish(drive_command);
     
-    double vx = msg-> linear.x; 
+    double vx = msg->linear.x; 
     double vy = msg->linear.y; 
     double w = msg->angular.z; 
 

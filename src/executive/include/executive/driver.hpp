@@ -22,6 +22,9 @@ private:
     void cmd_vel_callback(
         const geometry_msgs::msg::Twist::SharedPtr msg);
 
+    void joint_state_callback(
+        const sensor_msgs::msg::JointState::SharedPtr msg);
+
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr
         cmd_vel_subscription_;
 
@@ -30,5 +33,13 @@ private:
 
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr
 	    joint_state_publisher_;
+
+    rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr
+        joint_state_subscriber_;
+
+    double current_fl_angle_ = 0.0;
+    double current_fr_angle_ = 0.0;
+    double current_bl_angle_ = 0.0;
+    double current_br_angle_ = 0.0;
 };
 }
