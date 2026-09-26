@@ -75,6 +75,7 @@ void Driver::cmd_vel_callback(
 
     drive_publisher_->publish(drive_command);
     
+    /*
     double vx = msg->linear.x; 
     double vy = msg->linear.y; 
     double w = msg->angular.z; 
@@ -154,6 +155,157 @@ void Driver::cmd_vel_callback(
     RCLCPP_INFO(this->get_logger(),
     "\nFL: [%.2f m/s, %.2f rad] | FR: [%.2f m/s, %.2f rad]\nRL: [%.2f m/s, %.2f rad] | RR: [%.2f m/s, %.2f rad]",
     fl_speed, fl_angle, fr_speed, fr_angle, bl_speed, bl_angle, br_speed, br_angle);
+
+    */
+
+    // my attempt
+    double X = .375;
+    double Y = .375;
+    double wheelradius = 0.00557;
+
+    const double vx = msg->linear.x;
+    const double angular_z = msg->angular.z;
+
+    //forwards all wheels 0 deg
+    if (std::abs(vx) > 0.01 && std::abs(angular_z) < 0.01)
+    {
+        sensor_msgs::msg::JointState joint_msg;
+        joint_msg.header.stamp = this->get_clock()->now();
+
+        
+        joint_msg.name = 
+        {
+            "front_left_steering_joint", "front_right_steering_joint",
+            "rear_left_steering_joint", "rear_right_steering_joing",
+            "front_left_wheel_spin_joint", "front_right_wheel_spin_joint",
+            "rear_left_wheel_spin_joint", "rear_right_wheel_spin_joint"
+        };
+
+        joint_msg.position = {
+        0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0
+        };
+
+        const double wheel_velocity = vx / wheelradius;
+        joint_msg.velocity = {
+        0.0, 0.0, 0.0, 0.0,
+        wheel_velocity, wheel_velocity,
+        wheel_velocity, wheel_velocity
+        };
+
+        joint_state_publisher_->publish(joint_msg);
+        RCLCPP_INFO(this->get_logger(),
+              "Forwards: velocity = %.2f m/s",
+              vx);
+    }
+
+    // spin??
+    else if (std::abs(angular_z) > 0.01)
+    {
+        const double radius = std::hypot(X, Y);
+        const double wheel_linear_speed = 
+            std::abs(angular_z) * radius;
+        const double wheel_speed = 
+            wheel_linear_speed / wheelradius;
+
+
+        const double fl_angle = 
+            std::atan2(X, -Y);
+        const double fr_angle = 
+            std::atan2(X, Y);
+        const double bl_angle = 
+            std::atan2(-X, -Y);
+        const double br_angle = 
+            std::atan2(-X, Y);
+
+        double fl_velocity; double fr_velocity;
+        double bl_velocity; double br_velocity;
+
+        if (angular_z > 0.0)
+        {
+            fl_velocity = wheel_speed;
+            fr_velocity = wheel_speed;
+            bl_velocity = wheel_speed;
+            br_velocity = wheel_speed;
+        }
+        else
+        {
+            fl_velocity = -wheel_speed;
+            fr_velocity = -wheel_speed;
+            bl_velocity = -wheel_speed;
+            br_velocity = -wheel_speed;
+        }
+
+        sensor_msgs::msg::JointState joint_msg;
+        joint_msg.header.stamp = this->get_clock()->now();
+
+        joint_msg.name = {
+            "front_left_steering_joint",
+            "front_right_steering_joint",
+            "rear_left_steering_joint",
+            "rear_right_steering_joint",
+            "front_left_wheel_spin_joint",
+            "front_right_wheel_spin_joint",
+            "rear_left_wheel_spin_joint",
+            "rear_right_wheel_spin_joint"
+        };
+
+        joint_msg.position = {
+            fl_angle,
+            fr_angle,
+            bl_angle,
+            br_angle,
+            0.0, 0.0, 0.0, 0.0
+        };
+
+
+        joint_msg.velocity = {
+        0.0, 0.0, 0.0, 0.0,
+        fl_velocity, fr_velocity,
+        bl_velocity, br_velocity
+        };
+
+        joint_state_publisher_->publish(joint_msg);
+        RCLCPP_INFO(this->get_logger(), "SPIN: FL %.2f | FR %.2f | BL %.2F, | BR %.2f", fl_angle, fr_angle, bl_angle, br_angle);
+
+    }
+    
+    else
+    {
+        sensor_msgs::msg::JointState joint_msg;
+
+        joint_msg.header.stamp = this->get_clock()->now();
+
+        joint_msg.name = {
+            "front_left_steering_joint",
+            "front_right_steering_joint",
+            "rear_left_steering_joint",
+            "rear_right_steering_joint",
+            "front_left_wheel_spin_joint",
+            "front_right_wheel_spin_joint",
+            "rear_left_wheel_spin_joint",
+            "rear_right_wheel_spin_joint"
+        };
+
+        joint_msg.position = {
+            current_fl_angle_,
+            current_fr_angle_,
+            current_bl_angle_,
+            current_br_angle_,
+            0.0, 0.0, 0.0, 0.0
+        };
+
+        joint_msg.velocity = {
+            0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0
+        };
+
+        joint_state_publisher_->publish(joint_msg);
+        RCLCPP_INFO(this->get_logger(), "STOP");
+    }
+
+    drive_publisher_->publish(*msg);
+
 }
 
 }

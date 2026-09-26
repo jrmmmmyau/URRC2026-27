@@ -41,5 +41,7 @@ private:
     double current_fr_angle_ = 0.0;
     double current_bl_angle_ = 0.0;
     double current_br_angle_ = 0.0;
+
+   
 };
 }
