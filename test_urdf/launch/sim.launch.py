@@ -27,4 +27,32 @@ def generate_launch_description():
         arguments=['-topic','robot_description','-name','lunabot','-z','0.5'],
         output='screen'
     )
-    return LaunchDescription([rsp_node, gazebo, spawn_node])
+    # convert to gz format
+    bridge_node = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '/cmd_pos/fl_steering@std_msgs/msg/Float64]gz.msgs.Double',
+            '/cmd_pos/fr_steering@std_msgs/msg/Float64]gz.msgs.Double',
+            '/cmd_pos/rl_steering@std_msgs/msg/Float64]gz.msgs.Double',
+            '/cmd_pos/rr_steering@std_msgs/msg/Float64]gz.msgs.Double',
+            '/cmd_vel/fl_wheel@std_msgs/msg/Float64]gz.msgs.Double',
+            '/cmd_vel/fr_wheel@std_msgs/msg/Float64]gz.msgs.Double',
+            '/cmd_vel/rl_wheel@std_msgs/msg/Float64]gz.msgs.Double',
+            '/cmd_vel/rr_wheel@std_msgs/msg/Float64]gz.msgs.Double',
+            '/world/empty/model/lunabot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model',
+        ],
+        remappings=[
+            ('/world/empty/model/lunabot/joint_state', '/joint_states')
+        ],
+        output='screen'
+    )
+
+    # run driver code
+    driver_node = Node(
+        package='executive',
+        executable='driver_node',
+        output='screen'
+    )
+
+    return LaunchDescription([rsp_node, gazebo, spawn_node, bridge_node, driver_node])
