@@ -159,8 +159,8 @@ void Driver::cmd_vel_callback(
     */
 
     // my attempt
-    double X = .375;
-    double Y = .375;
+    double X = 1;
+    double Y = 2;
     double wheelradius = 0.00557;
 
     const double vx = msg->linear.x;
@@ -266,9 +266,10 @@ void Driver::cmd_vel_callback(
         };
 
         joint_state_publisher_->publish(joint_msg);
-        RCLCPP_INFO(this->get_logger(), "SPIN: FL %.2f | FR %.2f | BL %.2F, | BR %.2f", fl_angle, fr_angle, bl_angle, br_angle);
+        RCLCPP_INFO(this->get_logger(), "SPIN: FL angle %.2f FL speed %.2f | FR angle %.2f FR speed %.2f | BL angle %.2F BL speed %.2f | BR angle %.2f BR speed %.2f", fl_angle, fl_velocity, fr_angle, fr_velocity, bl_angle, bl_velocity, br_angle, br_velocity);
 
     }
+       
     
     else
     {
