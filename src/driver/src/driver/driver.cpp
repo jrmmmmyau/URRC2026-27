@@ -1,4 +1,4 @@
-#include "executive/driver.hpp"
+#include "driver/driver.hpp"
 
 #include <algorithm>
 #include <array>
@@ -24,7 +24,7 @@ double wrap_angle(double angle) {
 }
 }  // namespace
 
-namespace executive {
+namespace driver {
 
 Driver::Driver() : Node("driver") {
   cmd_vel_subscription_ = create_subscription<geometry_msgs::msg::Twist>(
@@ -153,4 +153,4 @@ void Driver::control_timer_callback() {
   }
 }
 
-}  // namespace executive
+}  // namespace driver

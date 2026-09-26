@@ -7,7 +7,7 @@
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "std_msgs/msg/float64.hpp"
 
-namespace executive {
+namespace driver {
 
 class Driver : public rclcpp::Node {
 public:
@@ -35,4 +35,4 @@ private:
   bool have_joint_state_{false};
 };
 
-}  // namespace executive
+}  // namespace driver

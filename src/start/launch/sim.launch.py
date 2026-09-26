@@ -7,7 +7,7 @@ from launch.substitutions import Command
 from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
-    pkg_share=get_package_share_directory('test_urdf')
+    pkg_share=get_package_share_directory('description')
     urdf_path=os.path.join(pkg_share, 'urdf', 'basic_robot.urdf')
     ros_gz_sim=get_package_share_directory('ros_gz_sim')
     rsp_node=Node(
@@ -50,7 +50,7 @@ def generate_launch_description():
 
     # run driver code
     driver_node = Node(
-        package='executive',
+        package='driver',
         executable='driver_node',
         output='screen'
     )
