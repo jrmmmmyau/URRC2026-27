@@ -367,19 +367,19 @@
       <topic>/cmd_pos/rr_steering</topic>
       <p_gain>20.0</p_gain>
     </plugin>
-    <plugin filename="gz-sim-joint-velocity-controller-system" name="gz::sim::systems::JointVelocityController">
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
       <joint_name>front_left_wheel_spin_joint</joint_name>
       <topic>/cmd_vel/fl_wheel</topic>
     </plugin>
-    <plugin filename="gz-sim-joint-velocity-controller-system" name="gz::sim::systems::JointVelocityController">
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
       <joint_name>front_right_wheel_spin_joint</joint_name>
       <topic>/cmd_vel/fr_wheel</topic>
     </plugin>
-    <plugin filename="gz-sim-joint-velocity-controller-system" name="gz::sim::systems::JointVelocityController">
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
       <joint_name>rear_left_wheel_spin_joint</joint_name>
       <topic>/cmd_vel/rl_wheel</topic>
     </plugin>
-    <plugin filename="gz-sim-joint-velocity-controller-system" name="gz::sim::systems::JointVelocityController">
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
       <joint_name>rear_right_wheel_spin_joint</joint_name>
       <topic>/cmd_vel/rr_wheel</topic>
     </plugin>
