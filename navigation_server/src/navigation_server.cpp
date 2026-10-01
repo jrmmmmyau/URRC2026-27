@@ -6,6 +6,10 @@
 #include <vector>
 #include <algorithm>
 
+const int BUFFER_PIXELS = 5;
+const float OBSTACLE_COST = 10.0f;
+const float TURN_COST_VALUE = 10.0f;
+
 bool is_free(const nav_msgs::msg::OccupancyGrid &map, int x, int y) 
 {
     if (x < 0 or x >= static_cast<int>(map.info.width)) {
@@ -44,6 +48,35 @@ bool map_validation(const nav_msgs::msg::OccupancyGrid &map)
     return true;
 }
 
+float obstacle_distance(const nav_msgs::msg::OccupancyGrid &map, int x, int y)
+{
+    float min_distance = BUFFER_PIXELS + 1;
+    float distance;
+    for (int xd = x - BUFFER_PIXELS; xd <= x + BUFFER_PIXELS; xd++)
+        {
+            for (int yd = y - BUFFER_PIXELS; yd <= y + BUFFER_PIXELS; yd++)
+                {
+                    if (xd < 0 or xd >= static_cast<int>(map.info.width)) {
+                    continue;
+                    }
+                    if (yd < 0 or yd >= static_cast<int>(map.info.height)) {
+                    continue;
+                    }
+
+                    int index = xd + (map.info.width * yd);
+                    if (map.data[index] != 0) {
+                    distance = std::sqrt(std::pow((x-xd),2)+std::pow((y-yd),2));
+                    if (distance < min_distance) {
+                        min_distance = distance;
+                    }
+                    }
+
+                    
+                }
+            }
+            return min_distance;
+}
+
 struct Node
 {
     int x;
@@ -68,7 +101,8 @@ void pathfind(const std::shared_ptr<navigation_server::srv::PlanPath::Request> r
   //a* beginnings
     // initialize start node and variables
     
-    const float TURN_COST = 10.0f;
+    const float TURN_COST = TURN_COST_VALUE;
+    
     std::vector<Node> open_list;
     std::vector<Node> closed_list;
     struct Node start_node;
@@ -182,6 +216,11 @@ void pathfind(const std::shared_ptr<navigation_server::srv::PlanPath::Request> r
                                                     new_node.g += TURN_COST;
                                                 }
                                             }
+                                        float obstacle_distance_value = obstacle_distance(request->map, new_node.x, new_node.y);
+                                        if (obstacle_distance_value <= BUFFER_PIXELS and obstacle_distance_value != 0){
+                                                float obstacle_cost = OBSTACLE_COST / std::pow(obstacle_distance_value,2);
+                                                new_node.g += obstacle_cost;
+                                            }
                                         new_node.h = std::sqrt(std::pow((goal_x - new_node.x),2) + std::pow((goal_y - new_node.y),2));
                                         new_node.f = new_node.g + new_node.h;   
                                         if (!in_open){ 
@@ -272,7 +311,10 @@ int main(int argc, char **argv)
   rclcpp::Service<navigation_server::srv::PlanPath>::SharedPtr service =
     node->create_service<navigation_server::srv::PlanPath>("plan_path", &pathfind);
 
-  RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "Ready to map, ts is working");
+  RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "Ready to map");
+  RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "Buffer Pixels: %d", BUFFER_PIXELS);
+  RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "Buffer Cost: %f", OBSTACLE_COST);
+  RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "Turn Cost: %f", TURN_COST_VALUE);
 
   rclcpp::spin(node);
   rclcpp::shutdown();
