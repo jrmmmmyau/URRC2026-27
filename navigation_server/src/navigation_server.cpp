@@ -53,6 +53,8 @@ struct Node
     float f;
     int parent_x;
     int parent_y;
+    int dx;
+    int dy;
 };
 
 void pathfind(const std::shared_ptr<navigation_server::srv::PlanPath::Request> request,
@@ -66,7 +68,7 @@ void pathfind(const std::shared_ptr<navigation_server::srv::PlanPath::Request> r
   //a* beginnings
     // initialize start node and variables
     
-    
+    const float TURN_COST = 2.5f;
     std::vector<Node> open_list;
     std::vector<Node> closed_list;
     struct Node start_node;
@@ -95,6 +97,8 @@ void pathfind(const std::shared_ptr<navigation_server::srv::PlanPath::Request> r
     start_node.x = start_x;
     start_node.y = start_y;
     start_node.g = 0;
+    start_node.dx = 0;
+    start_node.dy = 0;
     start_node.h = std::sqrt(std::pow((goal_x - start_node.x),2) + std::pow((goal_y - start_node.y),2));
     start_node.f = start_node.g + start_node.h;
     lowest_f = start_node.f;
@@ -146,6 +150,8 @@ void pathfind(const std::shared_ptr<navigation_server::srv::PlanPath::Request> r
                                     struct Node new_node;
                                     new_node.x = current.x + dx;
                                     new_node.y = current.y + dy;
+                                    new_node.dx = dx;
+                                    new_node.dy = dy;
                                     new_node.parent_x = current.x;
                                     new_node.parent_y = current.y;
                                     in_closed = false;
@@ -169,6 +175,12 @@ void pathfind(const std::shared_ptr<navigation_server::srv::PlanPath::Request> r
                                                 new_node.g = (std::sqrt(2.0f) + current.g);
                                             } else {
                                                 new_node.g = (1 + current.g);
+                                            }
+                                        if (current.dx != 0 || current.dy != 0){
+                                                if (dx != current.dx || dy != current.dy)
+                                                {
+                                                    new_node.g += TURN_COST;
+                                                }
                                             }
                                         new_node.h = std::sqrt(std::pow((goal_x - new_node.x),2) + std::pow((goal_y - new_node.y),2));
                                         new_node.f = new_node.g + new_node.h;   
@@ -210,7 +222,7 @@ void pathfind(const std::shared_ptr<navigation_server::srv::PlanPath::Request> r
             }
             path.push_back(path_node);
             std::reverse(path.begin(), path.end());
-            for (size_t i = 0; i < path.size(); i++) {RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "Path node: (%d, %d)", path[i].x, path[i].y);}
+            //for (size_t i = 0; i < path.size(); i++) {RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "Path node: (%d, %d)", path[i].x, path[i].y);}
             nav_msgs::msg::Path plan;
             plan.header = request->map.header;
             for (size_t i = 0; i < path.size(); i++)
@@ -258,7 +270,7 @@ int main(int argc, char **argv)
   rclcpp::Service<navigation_server::srv::PlanPath>::SharedPtr service =
     node->create_service<navigation_server::srv::PlanPath>("plan_path", &pathfind);
 
-  RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "Ready to map");
+  RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "Ready to map, ts is working");
 
   rclcpp::spin(node);
   rclcpp::shutdown();
