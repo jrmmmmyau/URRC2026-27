@@ -68,7 +68,7 @@ void pathfind(const std::shared_ptr<navigation_server::srv::PlanPath::Request> r
   //a* beginnings
     // initialize start node and variables
     
-    const float TURN_COST = 2.5f;
+    const float TURN_COST = 10.0f;
     std::vector<Node> open_list;
     std::vector<Node> closed_list;
     struct Node start_node;
@@ -194,6 +194,8 @@ void pathfind(const std::shared_ptr<navigation_server::srv::PlanPath::Request> r
                                                 open_list[open_index].f = new_node.f;
                                                 open_list[open_index].parent_x = new_node.parent_x;
                                                 open_list[open_index].parent_y = new_node.parent_y;
+                                                open_list[open_index].dx = new_node.dx;
+                                                open_list[open_index].dy = new_node.dy;
                                             }
                                         }
                                     }
