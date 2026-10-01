@@ -19,6 +19,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/PlanPath.srv"
   DEPENDENCIES geometry_msgs nav_msgs
 )
+ament_export_dependencies(rosidl_default_runtime)
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
@@ -36,11 +37,20 @@ if(BUILD_TESTING)
 endif()
 
 add_executable(navsrv src/navigation_server.cpp)
-ament_target_dependencies(navsrv rclcpp)
+ament_target_dependencies(navsrv rclcpp geometry_msgs nav_msgs)
 target_link_libraries(navsrv "${cpp_typesupport_target}")
+
+add_executable(map_publisher src/map_publisher.cpp)
+ament_target_dependencies(map_publisher rclcpp nav_msgs)
+
+add_executable(plan_client src/plan_client.cpp)
+ament_target_dependencies(plan_client rclcpp geometry_msgs nav_msgs)
+target_link_libraries(plan_client "${cpp_typesupport_target}")
 
 install(TARGETS
   navsrv
+  map_publisher
+  plan_client
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
