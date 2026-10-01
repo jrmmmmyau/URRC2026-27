@@ -4,24 +4,14 @@
 #include <cmath>
 #include <functional>
 
-namespace {
-const double wheel_radius = 0.09;
-const double half_length = 0.32;
-const double half_width = 0.24;
-const double angle_tolerance = 0.05;
-const double pi = 3.14159265358979323846;
-
-double angle_difference(double target, double current) {
-  return std::atan2(std::sin(target - current),
-                    std::cos(target - current));
-}
-
-double wrap_angle(double angle) {
-  return std::atan2(std::sin(angle), std::cos(angle));
-}
-}  // namespace
-
 namespace driver {
+
+namespace {
+constexpr double wheel_radius = 0.09;
+constexpr double wheel_x = 0.32;
+constexpr double wheel_y = 0.24;
+constexpr double steering_tolerance = 0.05;
+}
 
 Driver::Driver() : Node("driver") {
   cmd_vel_sub_ = create_subscription<geometry_msgs::msg::Twist>(
@@ -53,6 +43,8 @@ Driver::Driver() : Node("driver") {
   timer_ = create_wall_timer(
       std::chrono::milliseconds(20),
       std::bind(&Driver::publish_commands, this));
+
+  RCLCPP_INFO(get_logger(), "Driver node started");
 }
 
 void Driver::joint_state_callback(
@@ -74,50 +66,55 @@ void Driver::joint_state_callback(
 void Driver::cmd_vel_callback(
     const geometry_msgs::msg::Twist::SharedPtr msg) {
   const double vx = msg->linear.x;
-  const double vy = msg->linear.y;
-  const double wz = msg->angular.z;
+  const double angular_z = msg->angular.z;
 
-  const double fl_vx = vx - wz * half_width;
-  const double fl_vy = vy + wz * half_length;
-  const double fr_vx = vx + wz * half_width;
-  const double fr_vy = vy + wz * half_length;
-  const double rl_vx = vx - wz * half_width;
-  const double rl_vy = vy - wz * half_length;
-  const double rr_vx = vx + wz * half_width;
-  const double rr_vy = vy - wz * half_length;
+  // Drive forward with all four wheels straight.
+  if (std::abs(vx) > 0.01 && std::abs(angular_z) < 0.01) {
+    fl_target_ = 0.0;
+    fr_target_ = 0.0;
+    rl_target_ = 0.0;
+    rr_target_ = 0.0;
 
-  fl_target_ = std::atan2(fl_vy, fl_vx);
-  fr_target_ = std::atan2(fr_vy, fr_vx);
-  rl_target_ = std::atan2(rl_vy, rl_vx);
-  rr_target_ = std::atan2(rr_vy, rr_vx);
-
-  fl_speed_ = std::hypot(fl_vx, fl_vy) / wheel_radius;
-  fr_speed_ = std::hypot(fr_vx, fr_vy) / wheel_radius;
-  rl_speed_ = std::hypot(rl_vx, rl_vy) / wheel_radius;
-  rr_speed_ = std::hypot(rr_vx, rr_vy) / wheel_radius;
-
-  // Reverse a wheel if that avoids turning its steering joint more than 90°.
-  if (std::abs(angle_difference(fl_target_, fl_angle_)) > pi / 2) {
-    fl_target_ = wrap_angle(fl_target_ + pi);
-    fl_speed_ = -fl_speed_;
-  }
-  if (std::abs(angle_difference(fr_target_, fr_angle_)) > pi / 2) {
-    fr_target_ = wrap_angle(fr_target_ + pi);
-    fr_speed_ = -fr_speed_;
-  }
-  if (std::abs(angle_difference(rl_target_, rl_angle_)) > pi / 2) {
-    rl_target_ = wrap_angle(rl_target_ + pi);
-    rl_speed_ = -rl_speed_;
-  }
-  if (std::abs(angle_difference(rr_target_, rr_angle_)) > pi / 2) {
-    rr_target_ = wrap_angle(rr_target_ + pi);
-    rr_speed_ = -rr_speed_;
+    const double wheel_speed = vx / wheel_radius;
+    fl_speed_ = wheel_speed;
+    fr_speed_ = wheel_speed;
+    rl_speed_ = wheel_speed;
+    rr_speed_ = wheel_speed;
   }
 
-  if (std::abs(vx) < 0.001 && std::abs(vy) < 0.001 &&
-      std::abs(wz) < 0.001) {
-    fl_target_ = fr_target_ = rl_target_ = rr_target_ = 0.0;
-    fl_speed_ = fr_speed_ = rl_speed_ = rr_speed_ = 0.0;
+  // Spin in place. The steering angles are the same ones used by ng/driver.
+  else if (std::abs(angular_z) > 0.01) {
+    const double wheel_speed =
+        std::abs(angular_z) * std::hypot(wheel_x, wheel_y) / wheel_radius;
+
+    fl_target_ = std::atan2(wheel_x, -wheel_y);
+    fr_target_ = std::atan2(wheel_x, wheel_y);
+    rl_target_ = std::atan2(-wheel_x, -wheel_y);
+    rr_target_ = std::atan2(-wheel_x, wheel_y);
+
+    if (angular_z > 0.0) {
+      fl_speed_ = wheel_speed;
+      fr_speed_ = wheel_speed;
+      rl_speed_ = wheel_speed;
+      rr_speed_ = wheel_speed;
+    } else {
+      fl_speed_ = -wheel_speed;
+      fr_speed_ = -wheel_speed;
+      rl_speed_ = -wheel_speed;
+      rr_speed_ = -wheel_speed;
+    }
+  }
+
+  // Stop the wheels and return the steering to straight ahead.
+  else {
+    fl_target_ = 0.0;
+    fr_target_ = 0.0;
+    rl_target_ = 0.0;
+    rr_target_ = 0.0;
+    fl_speed_ = 0.0;
+    fr_speed_ = 0.0;
+    rl_speed_ = 0.0;
+    rr_speed_ = 0.0;
   }
 }
 
@@ -126,10 +123,10 @@ bool Driver::wheels_are_aligned() const {
     return false;
   }
 
-  return std::abs(angle_difference(fl_target_, fl_angle_)) < angle_tolerance &&
-         std::abs(angle_difference(fr_target_, fr_angle_)) < angle_tolerance &&
-         std::abs(angle_difference(rl_target_, rl_angle_)) < angle_tolerance &&
-         std::abs(angle_difference(rr_target_, rr_angle_)) < angle_tolerance;
+  return std::abs(fl_target_ - fl_angle_) < steering_tolerance &&
+         std::abs(fr_target_ - fr_angle_) < steering_tolerance &&
+         std::abs(rl_target_ - rl_angle_) < steering_tolerance &&
+         std::abs(rr_target_ - rr_angle_) < steering_tolerance;
 }
 
 void Driver::publish_commands() {
