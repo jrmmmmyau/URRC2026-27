@@ -1,22 +1,19 @@
 #include "driver/driver.hpp"
 
-#include <algorithm>
-#include <array>
 #include <chrono>
 #include <cmath>
 #include <functional>
 
 namespace {
-constexpr double kPi = 3.14159265358979323846;
-constexpr double kHalfPi = 1.5707963267948966;
-constexpr double kWheelRadius = 0.09;  // metres; matches the URDF wheel geometry
-constexpr double kHalfWheelbase = 0.32;
-constexpr double kHalfTrack = 0.24;
-constexpr double kSteeringTolerance = 0.05;  // radians (~2.9 degrees)
-constexpr double kCommandEpsilon = 1e-3;
+const double wheel_radius = 0.09;
+const double half_length = 0.32;
+const double half_width = 0.24;
+const double angle_tolerance = 0.05;
+const double pi = 3.14159265358979323846;
 
-double angle_error(double target, double current) {
-  return std::atan2(std::sin(target - current), std::cos(target - current));
+double angle_difference(double target, double current) {
+  return std::atan2(std::sin(target - current),
+                    std::cos(target - current));
 }
 
 double wrap_angle(double angle) {
@@ -27,130 +24,156 @@ double wrap_angle(double angle) {
 namespace driver {
 
 Driver::Driver() : Node("driver") {
-  cmd_vel_subscription_ = create_subscription<geometry_msgs::msg::Twist>(
+  cmd_vel_sub_ = create_subscription<geometry_msgs::msg::Twist>(
       "/cmd_vel", 10,
       std::bind(&Driver::cmd_vel_callback, this, std::placeholders::_1));
 
-  joint_state_subscription_ = create_subscription<sensor_msgs::msg::JointState>(
+  joint_state_sub_ = create_subscription<sensor_msgs::msg::JointState>(
       "/joint_states", 10,
       std::bind(&Driver::joint_state_callback, this, std::placeholders::_1));
 
-  steering_publishers_[0] = create_publisher<std_msgs::msg::Float64>(
+  fl_steering_pub_ = create_publisher<std_msgs::msg::Float64>(
       "/cmd_pos/fl_steering", 10);
-  steering_publishers_[1] = create_publisher<std_msgs::msg::Float64>(
+  fr_steering_pub_ = create_publisher<std_msgs::msg::Float64>(
       "/cmd_pos/fr_steering", 10);
-  steering_publishers_[2] = create_publisher<std_msgs::msg::Float64>(
+  rl_steering_pub_ = create_publisher<std_msgs::msg::Float64>(
       "/cmd_pos/rl_steering", 10);
-  steering_publishers_[3] = create_publisher<std_msgs::msg::Float64>(
+  rr_steering_pub_ = create_publisher<std_msgs::msg::Float64>(
       "/cmd_pos/rr_steering", 10);
 
-  wheel_publishers_[0] = create_publisher<std_msgs::msg::Float64>(
+  fl_wheel_pub_ = create_publisher<std_msgs::msg::Float64>(
       "/cmd_vel/fl_wheel", 10);
-  wheel_publishers_[1] = create_publisher<std_msgs::msg::Float64>(
+  fr_wheel_pub_ = create_publisher<std_msgs::msg::Float64>(
       "/cmd_vel/fr_wheel", 10);
-  wheel_publishers_[2] = create_publisher<std_msgs::msg::Float64>(
+  rl_wheel_pub_ = create_publisher<std_msgs::msg::Float64>(
       "/cmd_vel/rl_wheel", 10);
-  wheel_publishers_[3] = create_publisher<std_msgs::msg::Float64>(
+  rr_wheel_pub_ = create_publisher<std_msgs::msg::Float64>(
       "/cmd_vel/rr_wheel", 10);
 
-  // Keep commands alive while waiting for steering feedback.
-  control_timer_ = create_wall_timer(
+  timer_ = create_wall_timer(
       std::chrono::milliseconds(20),
-      std::bind(&Driver::control_timer_callback, this));
-
-  RCLCPP_INFO(get_logger(), "Swerve driver started");
+      std::bind(&Driver::publish_commands, this));
 }
 
 void Driver::joint_state_callback(
     const sensor_msgs::msg::JointState::SharedPtr msg) {
-  for (std::size_t i = 0; i < msg->name.size() && i < msg->position.size(); ++i) {
+  for (size_t i = 0; i < msg->name.size() && i < msg->position.size(); ++i) {
     if (msg->name[i] == "front_left_steering_joint") {
-      current_steering_angles_[0] = msg->position[i];
+      fl_angle_ = msg->position[i];
     } else if (msg->name[i] == "front_right_steering_joint") {
-      current_steering_angles_[1] = msg->position[i];
+      fr_angle_ = msg->position[i];
     } else if (msg->name[i] == "rear_left_steering_joint") {
-      current_steering_angles_[2] = msg->position[i];
+      rl_angle_ = msg->position[i];
     } else if (msg->name[i] == "rear_right_steering_joint") {
-      current_steering_angles_[3] = msg->position[i];
+      rr_angle_ = msg->position[i];
     }
   }
-  have_joint_state_ = true;
+  received_joint_state_ = true;
 }
 
-void Driver::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg) {
+void Driver::cmd_vel_callback(
+    const geometry_msgs::msg::Twist::SharedPtr msg) {
   const double vx = msg->linear.x;
   const double vy = msg->linear.y;
   const double wz = msg->angular.z;
 
-  const std::array<double, 4> x = {
-      kHalfWheelbase, kHalfWheelbase, -kHalfWheelbase, -kHalfWheelbase};
-  const std::array<double, 4> y = {
-      kHalfTrack, -kHalfTrack, kHalfTrack, -kHalfTrack};
+  const double fl_vx = vx - wz * half_width;
+  const double fl_vy = vy + wz * half_length;
+  const double fr_vx = vx + wz * half_width;
+  const double fr_vy = vy + wz * half_length;
+  const double rl_vx = vx - wz * half_width;
+  const double rl_vy = vy - wz * half_length;
+  const double rr_vx = vx + wz * half_width;
+  const double rr_vy = vy - wz * half_length;
 
-  for (std::size_t i = 0; i < 4; ++i) {
-    const double module_vx = vx - wz * y[i];
-    const double module_vy = vy + wz * x[i];
-    double target_angle = std::atan2(module_vy, module_vx);
-    double wheel_speed = std::hypot(module_vx, module_vy) / kWheelRadius;
+  fl_target_ = std::atan2(fl_vy, fl_vx);
+  fr_target_ = std::atan2(fr_vy, fr_vx);
+  rl_target_ = std::atan2(rl_vy, rl_vx);
+  rr_target_ = std::atan2(rr_vy, rr_vx);
 
-    // Use the equivalent reversed-wheel solution when it avoids a large
-    // steering rotation.
-    if (std::abs(angle_error(target_angle, current_steering_angles_[i])) >
-        kHalfPi) {
-      target_angle = wrap_angle(target_angle + kPi);
-      wheel_speed = -wheel_speed;
-    }
+  fl_speed_ = std::hypot(fl_vx, fl_vy) / wheel_radius;
+  fr_speed_ = std::hypot(fr_vx, fr_vy) / wheel_radius;
+  rl_speed_ = std::hypot(rl_vx, rl_vy) / wheel_radius;
+  rr_speed_ = std::hypot(rr_vx, rr_vy) / wheel_radius;
 
-    target_steering_angles_[i] = target_angle;
-    target_wheel_speeds_[i] = wheel_speed;
+  // Reverse a wheel if that avoids turning its steering joint more than 90°.
+  if (std::abs(angle_difference(fl_target_, fl_angle_)) > pi / 2) {
+    fl_target_ = wrap_angle(fl_target_ + pi);
+    fl_speed_ = -fl_speed_;
+  }
+  if (std::abs(angle_difference(fr_target_, fr_angle_)) > pi / 2) {
+    fr_target_ = wrap_angle(fr_target_ + pi);
+    fr_speed_ = -fr_speed_;
+  }
+  if (std::abs(angle_difference(rl_target_, rl_angle_)) > pi / 2) {
+    rl_target_ = wrap_angle(rl_target_ + pi);
+    rl_speed_ = -rl_speed_;
+  }
+  if (std::abs(angle_difference(rr_target_, rr_angle_)) > pi / 2) {
+    rr_target_ = wrap_angle(rr_target_ + pi);
+    rr_speed_ = -rr_speed_;
   }
 
-  if (std::abs(vx) < kCommandEpsilon && std::abs(vy) < kCommandEpsilon &&
-      std::abs(wz) < kCommandEpsilon) {
-    target_steering_angles_.fill(0.0);
-    target_wheel_speeds_.fill(0.0);
-  }
-
-  publish_steering_commands();
-}
-
-void Driver::publish_steering_commands() {
-  for (std::size_t i = 0; i < 4; ++i) {
-    std_msgs::msg::Float64 command;
-    command.data = target_steering_angles_[i];
-    steering_publishers_[i]->publish(command);
-  }
-}
-
-void Driver::publish_wheel_commands(const std::array<double, 4> &speeds) {
-  for (std::size_t i = 0; i < 4; ++i) {
-    std_msgs::msg::Float64 command;
-    command.data = speeds[i];
-    wheel_publishers_[i]->publish(command);
+  if (std::abs(vx) < 0.001 && std::abs(vy) < 0.001 &&
+      std::abs(wz) < 0.001) {
+    fl_target_ = fr_target_ = rl_target_ = rr_target_ = 0.0;
+    fl_speed_ = fr_speed_ = rl_speed_ = rr_speed_ = 0.0;
   }
 }
 
-bool Driver::steering_is_aligned() const {
-  if (!have_joint_state_) {
+bool Driver::wheels_are_aligned() const {
+  if (!received_joint_state_) {
     return false;
   }
-  for (std::size_t i = 0; i < 4; ++i) {
-    if (std::abs(angle_error(target_steering_angles_[i],
-                             current_steering_angles_[i])) >
-        kSteeringTolerance) {
-      return false;
-    }
-  }
-  return true;
+
+  return std::abs(angle_difference(fl_target_, fl_angle_)) < angle_tolerance &&
+         std::abs(angle_difference(fr_target_, fr_angle_)) < angle_tolerance &&
+         std::abs(angle_difference(rl_target_, rl_angle_)) < angle_tolerance &&
+         std::abs(angle_difference(rr_target_, rr_angle_)) < angle_tolerance;
 }
 
-void Driver::control_timer_callback() {
-  publish_steering_commands();
-  if (steering_is_aligned()) {
-    publish_wheel_commands(target_wheel_speeds_);
-  } else {
-    publish_wheel_commands({0.0, 0.0, 0.0, 0.0});
+void Driver::publish_commands() {
+  std_msgs::msg::Float64 fl_steering;
+  std_msgs::msg::Float64 fr_steering;
+  std_msgs::msg::Float64 rl_steering;
+  std_msgs::msg::Float64 rr_steering;
+
+  fl_steering.data = fl_target_;
+  fr_steering.data = fr_target_;
+  rl_steering.data = rl_target_;
+  rr_steering.data = rr_target_;
+
+  fl_steering_pub_->publish(fl_steering);
+  fr_steering_pub_->publish(fr_steering);
+  rl_steering_pub_->publish(rl_steering);
+  rr_steering_pub_->publish(rr_steering);
+
+  double fl_speed = 0.0;
+  double fr_speed = 0.0;
+  double rl_speed = 0.0;
+  double rr_speed = 0.0;
+
+  if (wheels_are_aligned()) {
+    fl_speed = fl_speed_;
+    fr_speed = fr_speed_;
+    rl_speed = rl_speed_;
+    rr_speed = rr_speed_;
   }
+
+  std_msgs::msg::Float64 fl_wheel;
+  std_msgs::msg::Float64 fr_wheel;
+  std_msgs::msg::Float64 rl_wheel;
+  std_msgs::msg::Float64 rr_wheel;
+
+  fl_wheel.data = fl_speed;
+  fr_wheel.data = fr_speed;
+  rl_wheel.data = rl_speed;
+  rr_wheel.data = rr_speed;
+
+  fl_wheel_pub_->publish(fl_wheel);
+  fr_wheel_pub_->publish(fr_wheel);
+  rl_wheel_pub_->publish(rl_wheel);
+  rr_wheel_pub_->publish(rr_wheel);
 }
 
 }  // namespace driver

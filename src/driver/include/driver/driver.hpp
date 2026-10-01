@@ -1,7 +1,5 @@
 #pragma once
 
-#include <array>
-
 #include "geometry_msgs/msg/twist.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
@@ -14,25 +12,43 @@ public:
   Driver();
 
 private:
-  using FloatPublisher = rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr;
+  using Float64Publisher = rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr;
 
   void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
   void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr msg);
-  void control_timer_callback();
-  void publish_steering_commands();
-  void publish_wheel_commands(const std::array<double, 4> &speeds);
-  bool steering_is_aligned() const;
+  void publish_commands();
+  bool wheels_are_aligned() const;
 
-  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_subscription_;
-  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_subscription_;
-  rclcpp::TimerBase::SharedPtr control_timer_;
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
+  rclcpp::TimerBase::SharedPtr timer_;
 
-  std::array<FloatPublisher, 4> steering_publishers_;
-  std::array<FloatPublisher, 4> wheel_publishers_;
-  std::array<double, 4> current_steering_angles_{};
-  std::array<double, 4> target_steering_angles_{};
-  std::array<double, 4> target_wheel_speeds_{};
-  bool have_joint_state_{false};
+  Float64Publisher fl_steering_pub_;
+  Float64Publisher fr_steering_pub_;
+  Float64Publisher rl_steering_pub_;
+  Float64Publisher rr_steering_pub_;
+
+  Float64Publisher fl_wheel_pub_;
+  Float64Publisher fr_wheel_pub_;
+  Float64Publisher rl_wheel_pub_;
+  Float64Publisher rr_wheel_pub_;
+
+  double fl_angle_ = 0.0;
+  double fr_angle_ = 0.0;
+  double rl_angle_ = 0.0;
+  double rr_angle_ = 0.0;
+
+  double fl_target_ = 0.0;
+  double fr_target_ = 0.0;
+  double rl_target_ = 0.0;
+  double rr_target_ = 0.0;
+
+  double fl_speed_ = 0.0;
+  double fr_speed_ = 0.0;
+  double rl_speed_ = 0.0;
+  double rr_speed_ = 0.0;
+
+  bool received_joint_state_ = false;
 };
 
 }  // namespace driver
