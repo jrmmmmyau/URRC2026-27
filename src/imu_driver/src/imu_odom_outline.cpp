@@ -12,17 +12,23 @@ using Vec3 = std::array<double, 3>;
 // frame and the world frame.
 static Vec3 rotate(const geometry_msgs::msg::Quaternion & q, const Vec3 & v)
 {
-
+  const double tx = 2.0 * (q.y * v[2] - q.z * v[1]);
+  const double ty = 2.0 * (q.z * v[0] - q.x * v[2]);
+  const double tz = 2.0 * (q.x * v[1] - q.y * v[0]);
   // TODO: return the rotated vector.
-  return {0.0, 0.0, 0.0};
+  return {v[0] + q.w * tx + (q.y * tz - q.z * ty),
+    v[1] + q.w * ty + (q.z * tx - q.x * tz),
+    v[2] + q.w * tz + (q.x * ty - q.y * tx)};
 }
 
 // TODO 2: Provide the reverse transformation.  From world to robot
 static Vec3 rotate_inverse(geometry_msgs::msg::Quaternion q, const Vec3 & v)
 {
-
+  q.x = -q.x;
+  q.y = -q.y;
+  q.z = -q.z;
   // TODO: return the inverse-transformed vector.
-  return {0.0, 0.0, 0.0};
+  return rotate(q,v);
 }
 
 class ImuOdom : public rclcpp::Node
