@@ -7,10 +7,10 @@
 namespace driver {
 
 namespace {
-constexpr double wheel_radius = 0.09;
-constexpr double wheel_x = 0.32;
-constexpr double wheel_y = 0.24;
-constexpr double steering_tolerance = 0.05;
+double wheel_radius = 0.09;
+double wheel_x = 0.32;
+double wheel_y = 0.24;
+double steering_tolerance = 0.075;
 }
 
 Driver::Driver() : Node("driver") {
@@ -87,32 +87,27 @@ void Driver::cmd_vel_callback(
     const double wheel_speed =
         std::abs(angular_z) * std::hypot(wheel_x, wheel_y) / wheel_radius;
 
-    fl_target_ = std::atan2(wheel_x, -wheel_y);
-    fr_target_ = std::atan2(wheel_x, wheel_y);
-    rl_target_ = std::atan2(-wheel_x, -wheel_y);
-    rr_target_ = std::atan2(-wheel_x, wheel_y);
-    RCLCPP_INFO(this->get_logger(), "FL: %.3f | FR: %.3f | RL: %.3f | RR: %.3f",
-            fl_target_, fr_target_, rl_target_, rr_target_);
+    fl_target_ = -std::atan2(wheel_y, wheel_x);
+    fr_target_ = std::atan2(wheel_y, wheel_x);
+    rl_target_ = std::atan2(wheel_y, wheel_x);
+    rr_target_ = -std::atan2(wheel_y, wheel_x);
+    // RCLCPP_INFO(this->get_logger(), "FL: %.3f | FR: %.3f | RL: %.3f | RR: %.3f",fl_target_, fr_target_, rl_target_, rr_target_);
 
     if (angular_z > 0.0) {
-      fl_speed_ = wheel_speed;
+      fl_speed_ = -wheel_speed;
       fr_speed_ = wheel_speed;
-      rl_speed_ = wheel_speed;
+      rl_speed_ = -wheel_speed;
       rr_speed_ = wheel_speed;
     } else {
-      fl_speed_ = -wheel_speed;
+      fl_speed_ = wheel_speed;
       fr_speed_ = -wheel_speed;
-      rl_speed_ = -wheel_speed;
+      rl_speed_ = wheel_speed;
       rr_speed_ = -wheel_speed;
     }
   }
 
   // Stop the wheels and return the steering to straight ahead.
   else {
-    fl_target_ = 0.0;
-    fr_target_ = 0.0;
-    rl_target_ = 0.0;
-    rr_target_ = 0.0;
     fl_speed_ = 0.0;
     fr_speed_ = 0.0;
     rl_speed_ = 0.0;
@@ -120,15 +115,26 @@ void Driver::cmd_vel_callback(
   }
 }
 
+double angle_error(double target, double current){
+  return std::atan2(std::sin(target-current), std::cos(target-current));
+}
+
 bool Driver::wheels_are_aligned() const {
   if (!received_joint_state_) {
     return false;
   }
 
-  return std::abs(fl_target_ - fl_angle_) < steering_tolerance &&
-         std::abs(fr_target_ - fr_angle_) < steering_tolerance &&
-         std::abs(rl_target_ - rl_angle_) < steering_tolerance &&
-         std::abs(rr_target_ - rr_angle_) < steering_tolerance;
+  RCLCPP_INFO(this->get_logger(),
+    "Errors: FL=%.3f | FR=%.3f | RL=%.3f | RR=%.3f",
+    angle_error(fl_target_, fl_angle_),
+    angle_error(fr_target_, fr_angle_),
+    angle_error(rl_target_, rl_angle_),
+    angle_error(rr_target_, rr_angle_));
+
+  return std::abs(angle_error(fl_target_ , fl_angle_)) < steering_tolerance &&
+         std::abs(angle_error(fr_target_ , fr_angle_)) < steering_tolerance &&
+         std::abs(angle_error(rl_target_ , rl_angle_)) < steering_tolerance &&
+         std::abs(angle_error(rr_target_ , rr_angle_)) < steering_tolerance;
 }
 
 void Driver::publish_commands() {
