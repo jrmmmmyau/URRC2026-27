@@ -69,7 +69,7 @@ void Driver::cmd_vel_callback(
   const double angular_z = msg->angular.z;
 
   // Drive forward with all four wheels straight.
-  if (std::abs(vx) > 0.01 && std::abs(angular_z) < 0.01) {
+  if (std::abs(vx) > 0.01 && std::abs(angular_z) < steering_tolerance) {
     fl_target_ = 0.0;
     fr_target_ = 0.0;
     rl_target_ = 0.0;
@@ -83,7 +83,7 @@ void Driver::cmd_vel_callback(
   }
 
   // Spin in place. The steering angles are the same ones used by ng/driver.
-  else if (std::abs(angular_z) > 0.01) {
+  else if (std::abs(angular_z) > steering_tolerance) {
     const double wheel_speed =
         std::abs(angular_z) * std::hypot(wheel_x, wheel_y) / wheel_radius;
 
@@ -91,6 +91,8 @@ void Driver::cmd_vel_callback(
     fr_target_ = std::atan2(wheel_x, wheel_y);
     rl_target_ = std::atan2(-wheel_x, -wheel_y);
     rr_target_ = std::atan2(-wheel_x, wheel_y);
+    RCLCPP_INFO(this->get_logger(), "FL: %.3f | FR: %.3f | RL: %.3f | RR: %.3f",
+            fl_target_, fr_target_, rl_target_, rr_target_);
 
     if (angular_z > 0.0) {
       fl_speed_ = wheel_speed;
