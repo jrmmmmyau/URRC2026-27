@@ -4,10 +4,10 @@ University of Rochester Robotics Club — Lunabotics autonomy stack.
 
 ## What's in here
 
-- `src/` — ROS 2 packages (C++, Jazzy)
-- `urdf/` — robot model
-- `launch/` — launch files
-- `config/` — parameter configs (Nav2, EKF, SLAM, etc.)
+- `src/description/` — robot URDF and Gazebo model plugins
+- `src/driver/` — swerve-drive command and feedback node
+- `src/start/` — launch files for starting simulation and the robot
+- `config/` — future parameter configs (Nav2, EKF, SLAM, etc.)
 
 ## Setup
 
