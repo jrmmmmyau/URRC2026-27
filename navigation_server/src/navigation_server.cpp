@@ -1,12 +1,13 @@
 #include "rclcpp/rclcpp.hpp"
 #include "navigation_server/srv/plan_path.hpp"
+#include "std_msgs/msg/bool.hpp"
 
 #include <memory>
 #include <cmath>
 #include <vector>
 #include <algorithm>
 
-const int BUFFER_PIXELS = 5;
+const int BUFFER_PIXELS = 15;
 const float OBSTACLE_COST = 10.0f;
 const float TURN_COST_VALUE = 10.0f;
 
@@ -90,11 +91,21 @@ struct Node
     int dy;
 };
 
+rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr path_planning_publisher;
+rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr plan_publisher;
+rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr waypoints_publisher;
+
 void pathfind(const std::shared_ptr<navigation_server::srv::PlanPath::Request> request,
           std::shared_ptr<navigation_server::srv::PlanPath::Response> response)
 {
+    std_msgs::msg::Bool path_planning_msg;
+    path_planning_msg.data = true;
+    path_planning_publisher->publish(path_planning_msg);
+
     if (!map_validation(request->map)){
         RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "Invalid Map");
+        path_planning_msg.data = false;
+        path_planning_publisher->publish(path_planning_msg);
         return;
     }
     RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "Start: %f, %f Goal: %f, %f", request->start.x, request->start.y, request->goal.x, request->goal.y);
@@ -124,6 +135,8 @@ void pathfind(const std::shared_ptr<navigation_server::srv::PlanPath::Request> r
     RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "goal: (%d, %d)", goal_x, goal_y);
     if (!(is_free(request->map, start_x, start_y) and is_free(request->map, goal_x, goal_y))) {
         RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "start or goal is invalid");
+        path_planning_msg.data = false;
+        path_planning_publisher->publish(path_planning_msg);
         return;
     } else {
         RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "start and goal are valid");
@@ -263,7 +276,30 @@ void pathfind(const std::shared_ptr<navigation_server::srv::PlanPath::Request> r
             }
             path.push_back(path_node);
             std::reverse(path.begin(), path.end());
-            //for (size_t i = 0; i < path.size(); i++) {RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "Path node: (%d, %d)", path[i].x, path[i].y);}
+            
+            std::vector<size_t> waypoint_indices;
+
+            waypoint_indices.push_back(0);
+            for (size_t i = 2; i < path.size(); i++) {
+                if (path[i].dx != path[i - 1].dx || path[i].dy != path[i - 1].dy) {
+                    waypoint_indices.push_back(i);
+                }
+            }
+            if (waypoint_indices.back() != path.size() - 1) {
+                waypoint_indices.push_back(path.size() - 1);
+            }
+
+            for (size_t i = 0; i < waypoint_indices.size(); i++)
+                {
+                    size_t path_index = waypoint_indices[i];
+
+                    RCLCPP_INFO(
+                        rclcpp::get_logger("navigation_server"),
+                        "Waypoint: (%d, %d)",
+                        path[path_index].x,
+                        path[path_index].y);
+                }
+
             nav_msgs::msg::Path plan;
             plan.header = request->map.header;
             for (size_t i = 0; i < path.size(); i++)
@@ -291,13 +327,41 @@ void pathfind(const std::shared_ptr<navigation_server::srv::PlanPath::Request> r
                     pose.pose.orientation.w = std::cos(yaw / 2.0);
                     plan.poses.push_back(pose);
                 }
+            nav_msgs::msg::Path waypoints;
+            waypoints.header = request->map.header;
+            for (size_t i = 0; i < waypoint_indices.size(); i++)
+                {
+                    size_t path_index = waypoint_indices[i];
+
+                    geometry_msgs::msg::PoseStamped pose;
+                    pose.header = waypoints.header;
+
+                    grid_to_world(
+                        request->map,
+                        path[path_index].x,
+                        path[path_index].y,
+                        path_world_x,
+                        path_world_y);
+
+                    pose.pose.position.x = path_world_x;
+                    pose.pose.position.y = path_world_y;
+
+                    waypoints.poses.push_back(pose);
+                }
+
+
+            plan_publisher->publish(plan);
+            waypoints_publisher->publish(waypoints);
+
             response->plan = plan;
+            response->waypoints = waypoints;
             break;
         }
     }
     
-    
-  RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "finished");  
+    path_planning_msg.data = false;
+    path_planning_publisher->publish(path_planning_msg);
+    RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "finished");  
 }
 
 
@@ -308,8 +372,10 @@ int main(int argc, char **argv)
 
   std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("navigation_server");
 
-  rclcpp::Service<navigation_server::srv::PlanPath>::SharedPtr service =
-    node->create_service<navigation_server::srv::PlanPath>("plan_path", &pathfind);
+  path_planning_publisher = node->create_publisher<std_msgs::msg::Bool>("/path_planning", 10);
+  plan_publisher = node->create_publisher<nav_msgs::msg::Path>("/plan", 10);
+  waypoints_publisher = node->create_publisher<nav_msgs::msg::Path>("/waypoints", 10);
+  rclcpp::Service<navigation_server::srv::PlanPath>::SharedPtr service = node->create_service<navigation_server::srv::PlanPath>("plan_path", &pathfind);
 
   RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "Ready to map");
   RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "Buffer Pixels: %d", BUFFER_PIXELS);
@@ -317,5 +383,9 @@ int main(int argc, char **argv)
   RCLCPP_INFO(rclcpp::get_logger("navigation_server"), "Turn Cost: %f", TURN_COST_VALUE);
 
   rclcpp::spin(node);
+  path_planning_publisher.reset();
+  plan_publisher.reset();
+  waypoints_publisher.reset();
+  node.reset();
   rclcpp::shutdown();
 }

@@ -3,3 +3,4 @@ geometry_msgs/Pose2D goal
 nav_msgs/OccupancyGrid map
 ---
 nav_msgs/Path plan
+nav_msgs/Path waypoints

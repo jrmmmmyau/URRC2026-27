@@ -1,0 +1,2 @@
+Current limitation: Map verification and replanning currently assume binary black-and-white occupancy maps. 
+Support for unknown space and intermediate/grayscale occupancy values still needs to be implemented.
