@@ -42,6 +42,7 @@ add_executable(cmd_vel_test_publisher src/cmd_vel_test_publisher.cpp)
 ament_target_dependencies(cmd_vel_test_publisher rclcpp nav_msgs std_msgs geometry_msgs tf2)
 
 add_executable(navsrv src/navigation_server.cpp)
+target_include_directories(navsrv PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 ament_target_dependencies(navsrv rclcpp geometry_msgs nav_msgs std_msgs)
 target_link_libraries(navsrv "${cpp_typesupport_target}")
 
@@ -59,6 +60,7 @@ add_executable(test_map_publisher src/test_map_publisher.cpp)
 ament_target_dependencies(test_map_publisher rclcpp nav_msgs geometry_msgs ament_index_cpp)
 
 add_executable(map_verifier_server src/map_verifier_server.cpp)
+target_include_directories(map_verifier_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 ament_target_dependencies(map_verifier_server rclcpp nav_msgs geometry_msgs)
 target_link_libraries(map_verifier_server "${cpp_typesupport_target}")
 
