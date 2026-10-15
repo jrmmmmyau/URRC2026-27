@@ -29,6 +29,8 @@ public:
     {
         cm_params_ = load_costmap_params(*this);
 
+        start_heading_ = this->declare_parameter<double>("start_heading", 0.0);
+        goal_heading_ = this->declare_parameter<double>("goal_heading", 0.0);
         map_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>("/map", 10, std::bind(&MapVerifierServer::map_callback, this, std::placeholders::_1));
         goal_sub_ = this->create_subscription<geometry_msgs::msg::Pose2D>("/goal", 10, std::bind(&MapVerifierServer::goal_callback, this, std::placeholders::_1));
         odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("/odom", 10, std::bind(&MapVerifierServer::odom_callback, this, std::placeholders::_1));
@@ -112,6 +114,9 @@ private:
     geometry_msgs::msg::Pose2D last_planned_goal_;
     nav_msgs::msg::Odometry current_odom_;
     nav_msgs::msg::Path current_path_;
+    
+    double start_heading_;
+    double goal_heading_;
 
     bool have_map_ = false;
     bool have_last_verified_map_ = false;
@@ -207,8 +212,9 @@ private:
         auto request = std::make_shared<navigation_server::srv::PlanPath::Request>();
         request->start.x = current_odom_.pose.pose.position.x;
         request->start.y = current_odom_.pose.pose.position.y;
-        request->start.theta = 0.0;
+        request->start.theta = start_heading_;
         request->goal = current_goal_;
+        request->goal.theta = goal_heading_;
         request->map = current_map_;
 
         plan_in_flight_ = true;

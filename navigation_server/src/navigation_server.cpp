@@ -111,7 +111,7 @@ void pathfind(const std::shared_ptr<navigation_server::srv::PlanPath::Request> r
         } else if (i < path.size() - 1) {
             yaw = std::atan2(double(path[i + 1].y - path[i].y), double(path[i + 1].x - path[i].x));
         } else {
-            yaw = std::atan2(double(path[i].y - path[i - 1].y), double(path[i].x - path[i - 1].x));
+            yaw = request->goal.theta;
         }
         pose.pose.orientation.z = std::sin(yaw / 2.0);
         pose.pose.orientation.w = std::cos(yaw / 2.0);

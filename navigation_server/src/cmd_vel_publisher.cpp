@@ -28,6 +28,7 @@ enum class ControllerState
 {
     DRIVING,
     TURNING,
+    FINAL_TURN,
     GOAL_REACHED
 };
 public:
@@ -195,18 +196,28 @@ private:
         if (waypoint_distance <= WAYPOINT_DISTANCE_THRESHOLD || passed_distance >= 0) {
             if (current_waypoint_index_ == current_waypoints_.poses.size() - 1)
             {
-                goal_reached_ = true;
-                state_ = ControllerState::GOAL_REACHED;
-                geometry_msgs::msg::Twist cmd_vel;
+                const auto& final_orientation = 
+                    current_path_.poses.back().pose.orientation;
 
-                cmd_vel.linear.x = 0.0;
-                cmd_vel.angular.z = 0.0;
+                tf2::Quaternion q_goal(
+                    final_orientation.x,
+                    final_orientation.y,
+                    final_orientation.z,
+                    final_orientation.w
+                );
 
-                cmd_vel_publisher_->publish(cmd_vel);
+                double roll, pitch, goal_yaw;
+                tf2::Matrix3x3(q_goal).getRPY(roll, pitch, goal_yaw);
 
-                RCLCPP_INFO(this->get_logger(), "Final waypoint reached. Stopping.");
+                target_heading_ = goal_yaw;
+                state_ = ControllerState::FINAL_TURN;
+                current_speed_ = 0.0f;
 
-                return;
+                RCLCPP_INFO(
+                    this->get_logger(),
+                    "Final waypoint reached, turning to goal heading; %.2f rad",
+                    target_heading_
+                );
             }
             if (current_waypoint_index_ < current_waypoints_.poses.size() - 1) {
 
@@ -300,7 +311,7 @@ private:
     
         geometry_msgs::msg::Twist cmd_vel;
 
-        if (state_ == ControllerState::TURNING)
+        if (state_ == ControllerState::TURNING || state_ == ControllerState::FINAL_TURN)
         {
             float angle_error = target_heading_ - yaw;
 
@@ -316,18 +327,30 @@ private:
 
             if (std::abs(angle_error) <= TURN_THRESHOLD)
             {
-                
                 cmd_vel.linear.x = 0.0;
                 cmd_vel.angular.z = 0.0;
 
-                state_ = ControllerState::DRIVING;
-                current_waypoint_index_++;
+                if (state_ == ControllerState::FINAL_TURN)
+                {
+                    state_ = ControllerState::GOAL_REACHED;
+                    goal_reached_ = true;
+                    RCLCPP_INFO(
+                        this->get_logger(),
+                        "Goal reached with final heading: %.2f rad",
+                        yaw
+                    );
+                }
+                else
+                {
+                    state_ = ControllerState::DRIVING;
+                    current_waypoint_index_++;
 
-                RCLCPP_INFO(
-                    this->get_logger(),
-                    "Turn complete. Driving toward waypoint %zu.",
-                    current_waypoint_index_);
-            }
+                    RCLCPP_INFO(
+                        this->get_logger(),
+                        "Turn complete. Driving toward waypoint %zu.",
+                        current_waypoint_index_);
+                }
+            }    
             else
             {
                 cmd_vel.linear.x = 0.0;
