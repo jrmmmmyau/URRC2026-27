@@ -65,7 +65,7 @@ ament_target_dependencies(map_verifier_server rclcpp nav_msgs geometry_msgs)
 target_link_libraries(map_verifier_server "${cpp_typesupport_target}")
 
 install(
-  DIRECTORY maps
+  DIRECTORY maps launch
   DESTINATION share/${PROJECT_NAME}
 )
 
