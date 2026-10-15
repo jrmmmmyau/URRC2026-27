@@ -24,8 +24,8 @@ public:
         // Starting robot state
         // -------------------------------------------------
 
-        this->declare_parameter<double>("robot_x", 0.0);
-        this->declare_parameter<double>("robot_y", 0.0);
+        this->declare_parameter<double>("robot_x", 15.5);
+        this->declare_parameter<double>("robot_y", 15.5);
         this->declare_parameter<double>("yaw_degrees", 0.0);
 
         robot_x_ = this->get_parameter("robot_x").as_double();
@@ -190,15 +190,15 @@ private:
         // Debug output
         // ---------------------------------------------
 
-        RCLCPP_INFO(
-            this->get_logger(),
-            "Robot: x=%.2f y=%.2f yaw=%.2f | "
-            "cmd_vel: v=%.2f w=%.2f",
-            robot_x_,
-            robot_y_,
-            robot_yaw_,
-            linear_velocity_,
-            angular_velocity_);
+       // RCLCPP_INFO(
+         //   this->get_logger(),
+           // "Robot: x=%.2f y=%.2f yaw=%.2f | "
+           // "cmd_vel: v=%.2f w=%.2f",
+     //       robot_x_,
+       //     robot_y_,
+         //   robot_yaw_,
+           // linear_velocity_,
+          //  angular_velocity_);
     }
 };
 
