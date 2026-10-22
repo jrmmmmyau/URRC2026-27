@@ -28,8 +28,6 @@ def generate_launch_description():
         arguments=[
             '-topic', 'robot_description',
             '-name', 'melbot',
-            # Repeatable guidebook-valid starting-zone pose. Competition pose
-            # and cardinal orientation are randomized immediately before a run.
             '-x', '1.0', '-y', '0.75', '-z', '0.35', '-Y', '0.0'
         ],
         output='screen'
