@@ -12,7 +12,7 @@
 
 const int CONTROL_FREQUENCY = 10;  // Hz
 const int DISTANCE_INCREASE_LIMIT = 10;
-const int LOOKAHEAD_POINTS = 5;
+const int LOOKAHEAD_POINTS = 20;
 const float TURN_THRESHOLD = 0.2;  // radians
 const float TURN_SPEED = 0.5;  // rad/s
 const float DRIVE_SPEED = 5; // m/s
@@ -21,6 +21,8 @@ const float MAX_ACCELERATION = 1.0; // m/s^2
 const float MAX_DECELERATION = 1.5; // m/s^2
 const float MIN_START_SPEED = 0.5; // m/s
 const float WAYPOINT_DISTANCE_THRESHOLD = 1; // meters
+
+const bool PURE_PURSUIT = true; 
 
 class CmdVelPublisher : public rclcpp::Node
 {
@@ -91,7 +93,112 @@ private:
         path_planning_ = msg->data;
         have_path_planning_ = true;
     }
-    void control_loop()
+    void control_loop() {
+        if (PURE_PURSUIT){
+            pure_pursuit_controller();
+        } else {
+            old_controller();
+        }
+    }
+    void pure_pursuit_controller() {
+        // Implement the pure pursuit controller logic here
+        float closest_distance = std::numeric_limits<float>::max();
+        int closest_index = -1;
+        int increasing_count = 0;
+        
+        float temp_desired_speed = DRIVE_SPEED;
+        current_speed_ = temp_desired_speed;
+
+        if (path_planning_ || 
+            !have_odom_ || 
+            !have_path_ || 
+            !have_path_planning_ || 
+            !have_waypoints_ || 
+            current_waypoints_.poses.empty() || 
+            current_path_.poses.empty() || 
+            current_waypoints_.poses.size() < 2){
+            geometry_msgs::msg::Twist cmd_vel;
+            cmd_vel.linear.x = 0.0;
+            cmd_vel.angular.z = 0.0;
+            cmd_vel_publisher_->publish(cmd_vel);
+            return;
+        }
+
+        if (state_ == ControllerState::GOAL_REACHED)
+        {
+            geometry_msgs::msg::Twist cmd_vel;
+
+            cmd_vel.linear.x = 0.0;
+            cmd_vel.angular.z = 0.0;
+
+            cmd_vel_publisher_->publish(cmd_vel);
+
+            return;
+        }
+
+        float robot_x = current_odom_.pose.pose.position.x;
+        float robot_y = current_odom_.pose.pose.position.y;
+
+        for (size_t i = previous_closest_index_; i < current_path_.poses.size(); i++)
+        {
+            float path_x = current_path_.poses[i].pose.position.x;
+            float path_y = current_path_.poses[i].pose.position.y;
+            float indexed_distance = std::sqrt(std::pow((robot_x - path_x),2) + std::pow((robot_y - path_y),2));
+            if (indexed_distance < closest_distance) {
+                closest_distance = indexed_distance;
+                closest_index = i;
+                increasing_count = 0;
+            } else if (indexed_distance > closest_distance) {
+                increasing_count++;
+            }
+            if (increasing_count >= DISTANCE_INCREASE_LIMIT) {
+                break;
+            }
+                
+        }
+
+        int lookahead_index = closest_index + LOOKAHEAD_POINTS;
+        if (lookahead_index >= current_path_.poses.size()) {
+            lookahead_index = current_path_.poses.size() - 1;
+        }
+
+        float target_x = current_path_.poses[lookahead_index].pose.position.x;
+        float target_y = current_path_.poses[lookahead_index].pose.position.y;
+
+        auto orientation = current_odom_.pose.pose.orientation;
+
+        tf2::Quaternion q(orientation.x, orientation.y, orientation.z, orientation.w);
+
+        double roll;
+        double pitch;
+        double yaw;
+
+        tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+
+        float target_angle = std::atan2(target_y - robot_y, target_x - robot_x);
+
+        float alpha = target_angle - yaw;
+        while (alpha > M_PI) {
+            alpha -= 2 * M_PI;
+        }
+        while (alpha < -M_PI) {
+            alpha += 2 * M_PI;
+        }
+
+        float lookahead_distance = std::sqrt(std::pow((target_x - robot_x), 2) + std::pow((target_y - robot_y), 2));
+        float curvature = (2 * std::sin(alpha)) / lookahead_distance;
+
+        float angular_velocity = curvature * current_speed_;
+
+        geometry_msgs::msg::Twist cmd_vel;
+        cmd_vel.linear.x = current_speed_;
+        cmd_vel.angular.z = angular_velocity;
+
+        cmd_vel_publisher_->publish(cmd_vel);
+
+    }
+
+    void old_controller()
     {
         float closest_distance = std::numeric_limits<float>::max();
         int closest_index = -1;
