@@ -25,7 +25,11 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             [os.path.join(ros_gz_sim, 'launch', 'gz_sim.launch.py')]
         ),
-        launch_arguments={'gz_args': f'{world_path} -r'}.items(),
+        # Ogre2 heightmap shaders crash on some integrated GPUs. Ogre1 renders
+        # the same SDF heightmap without requiring those unsupported shaders.
+        launch_arguments={
+            'gz_args': f'{world_path} -r --render-engine ogre'
+        }.items(),
     )
 
     spawn_node = Node(
