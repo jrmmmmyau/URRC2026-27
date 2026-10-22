@@ -21,6 +21,8 @@ const float MAX_ACCELERATION = 1.0; // m/s^2
 const float MAX_DECELERATION = 1.5; // m/s^2
 const float MIN_START_SPEED = 0.5; // m/s
 const float WAYPOINT_DISTANCE_THRESHOLD = 1; // meters
+const float GOAL_SLOWDOWN_DISTANCE = 10.0; // meters
+const float GOAL_DISTANCE_THRESHOLD = 0.1; // meters
 
 const bool PURE_PURSUIT = true; 
 
@@ -106,8 +108,8 @@ private:
         int closest_index = -1;
         int increasing_count = 0;
         
-        float temp_desired_speed = DRIVE_SPEED;
-        current_speed_ = temp_desired_speed;
+        float desired_speed = MAX_SPEED;
+        
 
         if (path_planning_ || 
             !have_odom_ || 
@@ -165,6 +167,11 @@ private:
         float target_x = current_path_.poses[lookahead_index].pose.position.x;
         float target_y = current_path_.poses[lookahead_index].pose.position.y;
 
+        float goal_x = current_path_.poses.back().pose.position.x;
+        float goal_y = current_path_.poses.back().pose.position.y;
+
+        float distance_to_goal = std::sqrt(std::pow((goal_x - robot_x), 2) + std::pow((goal_y - robot_y), 2));
+
         auto orientation = current_odom_.pose.pose.orientation;
 
         tf2::Quaternion q(orientation.x, orientation.y, orientation.z, orientation.w);
@@ -174,6 +181,51 @@ private:
         double yaw;
 
         tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+
+        if (distance_to_goal <= GOAL_DISTANCE_THRESHOLD) {
+            current_speed_ = 0.0;
+
+            const auto& final_orientation = current_path_.poses.back().pose.orientation;
+
+            tf2::Quaternion q_goal(
+                final_orientation.x,
+                final_orientation.y,
+                final_orientation.z,
+                final_orientation.w
+            );
+
+            double goal_roll, goal_pitch, goal_yaw;
+            tf2::Matrix3x3(q_goal).getRPY(goal_roll, goal_pitch, goal_yaw);
+            float angle_error = goal_yaw - yaw;
+            while (angle_error > M_PI) {
+                angle_error -= 2 * M_PI;
+            }
+            while (angle_error < -M_PI) {
+                angle_error += 2 * M_PI;
+            }
+
+            geometry_msgs::msg::Twist cmd_vel;
+            if (std::abs(angle_error) <= TURN_THRESHOLD) {
+                cmd_vel.linear.x = 0.0;
+                cmd_vel.angular.z = 0.0;
+                state_ = ControllerState::GOAL_REACHED;
+                goal_reached_ = true;
+                RCLCPP_INFO(
+                    this->get_logger(),
+                    "Goal reached with final heading: %.2f rad",
+                    yaw
+                );
+            } else {
+                cmd_vel.linear.x = 0.0;
+                if (angle_error > 0) {
+                    cmd_vel.angular.z = TURN_SPEED;
+                } else {
+                    cmd_vel.angular.z = -TURN_SPEED;
+                }
+            }
+            cmd_vel_publisher_->publish(cmd_vel);
+            return;
+        }
 
         float target_angle = std::atan2(target_y - robot_y, target_x - robot_x);
 
@@ -188,6 +240,36 @@ private:
         float lookahead_distance = std::sqrt(std::pow((target_x - robot_x), 2) + std::pow((target_y - robot_y), 2));
         float curvature = (2 * std::sin(alpha)) / lookahead_distance;
 
+        desired_speed = MAX_SPEED / (1.0 + 2.0 * std::abs(curvature));
+
+        float goal_speed = MAX_SPEED * (distance_to_goal / GOAL_SLOWDOWN_DISTANCE);
+
+        if (goal_speed > MAX_SPEED) {
+            goal_speed = MAX_SPEED;
+        }
+
+        if (desired_speed > goal_speed) {
+            desired_speed = goal_speed;
+        }
+
+        float dt = 1.0 / CONTROL_FREQUENCY;
+
+        if (desired_speed > current_speed_) {
+            float speed_change_a = MAX_ACCELERATION * dt;
+            if (speed_change_a < desired_speed - current_speed_) {
+                current_speed_ += speed_change_a;
+            } else {
+                current_speed_ = desired_speed;
+            }
+        } else if (desired_speed < current_speed_) {
+            float speed_change_d = MAX_DECELERATION * dt;
+            if (speed_change_d < current_speed_ - desired_speed) {
+                current_speed_ -= speed_change_d;
+            } else {
+                current_speed_ = desired_speed;
+            }
+        }
+        
         float angular_velocity = curvature * current_speed_;
 
         geometry_msgs::msg::Twist cmd_vel;
