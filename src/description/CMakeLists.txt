@@ -24,7 +24,10 @@ install(
 install(
   DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../map/
   DESTINATION share/${PROJECT_NAME}/worlds
-  FILES_MATCHING PATTERN "*.sdf"
+  FILES_MATCHING
+    PATTERN "*.sdf"
+    PATTERN "*.png"
+    PATTERN "*.obj"
 )
 
 ament_package()
