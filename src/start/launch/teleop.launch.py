@@ -19,7 +19,7 @@ def generate_launch_description():
 
     gazebo=IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(ros_gz_sim, 'launch','gz_sim.launch.py')]),
-        launch_arguments={'gz_args':'empty.sdf -r'}.items()
+        launch_arguments={'gz_args':'/home/melbot/URRC2026-27/map/arena.sdf -r'}.items()
     )
     spawn_node=Node(
         package='ros_gz_sim',
@@ -40,10 +40,10 @@ def generate_launch_description():
             '/cmd_vel/fr_wheel@std_msgs/msg/Float64]gz.msgs.Double',
             '/cmd_vel/rl_wheel@std_msgs/msg/Float64]gz.msgs.Double',
             '/cmd_vel/rr_wheel@std_msgs/msg/Float64]gz.msgs.Double',
-            '/world/empty/model/lunabot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model',
+            '/world/empty/model/melbot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model',
         ],
         remappings=[
-            ('/world/empty/model/lunabot/joint_state', '/joint_states')
+            ('/world/empty/model/melbot/joint_state', '/joint_states')
         ],
         output='screen'
     )
