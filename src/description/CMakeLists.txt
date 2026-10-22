@@ -19,4 +19,12 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
+# Install repository-level Gazebo worlds with the robot description package so
+# launch files do not depend on a developer-specific absolute workspace path.
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../map/
+  DESTINATION share/${PROJECT_NAME}/worlds
+  FILES_MATCHING PATTERN "*.sdf"
+)
+
 ament_package()
