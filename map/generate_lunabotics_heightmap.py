@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Generate the deterministic BP-1 terrain heightmap used by Gazebo.
+"""Generate deterministic BP-1 height, diffuse, and normal maps for Gazebo.
 
-The output is a 257 x 257 grayscale PNG (2^n + 1, as expected by Gazebo
-heightmaps). Pixel intensity maps linearly to [-0.40 m, +0.15 m].
+The height output is a 257 x 257 grayscale PNG (2^n + 1, as expected by
+Gazebo heightmaps). Pixel intensity maps linearly to [-0.40 m, +0.15 m].
 """
 
 from __future__ import annotations
@@ -46,7 +46,7 @@ def crater_height(x: float, y: float) -> float:
     return height
 
 
-def generate(output: Path) -> None:
+def generate(output: Path) -> tuple[Path, Path, Path]:
     random.seed(RANDOM_SEED)
 
     # Upscaled, blurred seeded noise gives non-periodic broad surface variation.
@@ -99,8 +99,60 @@ def generate(output: Path) -> None:
     image.putdata(pixels)
     image.save(output, optimize=True)
 
+    # OGRE heightmaps expect an explicit diffuse and normal texture layer.
+    # The diffuse texture resembles dry crushed basalt without external assets.
+    diffuse_pixels: list[tuple[int, int, int]] = []
+    elevations = [MIN_HEIGHT + HEIGHT_RANGE * value / 255.0 for value in pixels]
+    for index, elevation in enumerate(elevations):
+        noise_value = (noise_pixels[index] - 127.5) / 127.5
+        shade = round(15.0 * noise_value + 18.0 * min(0.0, elevation))
+        diffuse_pixels.append(
+            (
+                max(0, min(255, 91 + shade)),
+                max(0, min(255, 82 + shade)),
+                max(0, min(255, 70 + shade)),
+            )
+        )
+
+    diffuse_path = output.with_name("lunabotics_regolith_diffuse.png")
+    diffuse = Image.new("RGB", (IMAGE_SIZE, IMAGE_SIZE))
+    diffuse.putdata(diffuse_pixels)
+    diffuse.save(diffuse_path, optimize=True)
+
+    # Derive tangent-space normals from the physical elevation gradient so
+    # crater rims and gentle undulations remain legible under arena lighting.
+    dx = ARENA_X / (IMAGE_SIZE - 1)
+    dy = ARENA_Y / (IMAGE_SIZE - 1)
+    normal_pixels: list[tuple[int, int, int]] = []
+    for row in range(IMAGE_SIZE):
+        row_before = max(0, row - 1)
+        row_after = min(IMAGE_SIZE - 1, row + 1)
+        for column in range(IMAGE_SIZE):
+            column_before = max(0, column - 1)
+            column_after = min(IMAGE_SIZE - 1, column + 1)
+            dz_dx = (
+                elevations[row * IMAGE_SIZE + column_after]
+                - elevations[row * IMAGE_SIZE + column_before]
+            ) / ((column_after - column_before) * dx)
+            # Image rows increase toward world -y.
+            dz_dy = -(
+                elevations[row_after * IMAGE_SIZE + column]
+                - elevations[row_before * IMAGE_SIZE + column]
+            ) / ((row_after - row_before) * dy)
+            nx, ny, nz = -dz_dx, -dz_dy, 1.0
+            magnitude = math.sqrt(nx * nx + ny * ny + nz * nz)
+            normal_pixels.append(
+                tuple(round(127.5 * (component / magnitude + 1.0)) for component in (nx, ny, nz))
+            )
+
+    normal_path = output.with_name("lunabotics_regolith_normal.png")
+    normal = Image.new("RGB", (IMAGE_SIZE, IMAGE_SIZE))
+    normal.putdata(normal_pixels)
+    normal.save(normal_path, optimize=True)
+    return output, diffuse_path, normal_path
+
 
 if __name__ == "__main__":
     destination = Path(__file__).resolve().parent / "heightmaps" / "lunabotics_moon_terrain.png"
-    generate(destination)
-    print(destination)
+    for generated_path in generate(destination):
+        print(generated_path)

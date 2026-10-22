@@ -44,8 +44,9 @@
     </light>
 
     <!--
-      The PNG grayscale range maps to [-0.40 m, +0.15 m]. Relative resource
-      paths keep the world relocatable when installed with the description package.
+      The PNG encodes the original [-0.40 m, +0.15 m] design range into
+      Gazebo's [0.00 m, 0.55 m] heightfield range. Nominal grade is z=0.40 m.
+      Relative paths keep the installed world relocatable.
     -->
     <model name="bp1_heightmap_terrain">
       <static>true</static>
@@ -56,7 +57,6 @@
             <heightmap>
               <uri>heightmaps/lunabotics_moon_terrain.png</uri>
               <size>6.88 5.00 0.55</size>
-              <pos>0 0 -0.40</pos>
               <sampling>1</sampling>
             </heightmap>
           </geometry>
@@ -70,15 +70,14 @@
             <heightmap>
               <uri>heightmaps/lunabotics_moon_terrain.png</uri>
               <size>6.88 5.00 0.55</size>
-              <pos>0 0 -0.40</pos>
               <sampling>1</sampling>
+              <texture>
+                <size>0.65</size>
+                <diffuse>heightmaps/lunabotics_regolith_diffuse.png</diffuse>
+                <normal>heightmaps/lunabotics_regolith_normal.png</normal>
+              </texture>
             </heightmap>
           </geometry>
-          <material>
-            <ambient>0.24 0.21 0.18 1</ambient>
-            <diffuse>0.36 0.31 0.25 1</diffuse>
-            <specular>0.025 0.025 0.025 1</specular>
-          </material>
         </visual>
       </link>
     </model>
@@ -87,20 +86,19 @@
     <model name="operational_markings">
       <static>true</static>
       <link name="markings">
-        <visual name="starting_zone">
-          <pose>1.00 0.75 0.006 0 0 0</pose>
-          <geometry><box><size>2.00 1.50 0.012</size></box></geometry>
-          <material><ambient>0.15 0.75 0.22 0.16</ambient><diffuse>0.15 0.75 0.22 0.16</diffuse></material>
-          <transparency>0.84</transparency>
-        </visual>
+        <!-- Solid border avoids transparent-plane depth sorting artifacts. -->
+        <visual name="starting_zone_south"><pose>1.00 0.02 0.406 0 0 0</pose><geometry><box><size>2.00 0.04 0.012</size></box></geometry><material><ambient>0.15 0.75 0.22 1</ambient><diffuse>0.15 0.75 0.22 1</diffuse></material></visual>
+        <visual name="starting_zone_north"><pose>1.00 1.48 0.406 0 0 0</pose><geometry><box><size>2.00 0.04 0.012</size></box></geometry><material><ambient>0.15 0.75 0.22 1</ambient><diffuse>0.15 0.75 0.22 1</diffuse></material></visual>
+        <visual name="starting_zone_west"><pose>0.02 0.75 0.406 0 0 0</pose><geometry><box><size>0.04 1.50 0.012</size></box></geometry><material><ambient>0.15 0.75 0.22 1</ambient><diffuse>0.15 0.75 0.22 1</diffuse></material></visual>
+        <visual name="starting_zone_east"><pose>1.98 0.75 0.406 0 0 0</pose><geometry><box><size>0.04 1.50 0.012</size></box></geometry><material><ambient>0.15 0.75 0.22 1</ambient><diffuse>0.15 0.75 0.22 1</diffuse></material></visual>
         <visual name="berm_target">
-          <pose>5.38 0.90 0.008 0 0 0</pose>
+          <pose>5.38 0.90 0.408 0 0 0</pose>
           <geometry><box><size>2.20 0.90 0.016</size></box></geometry>
           <material><ambient>0.90 0.10 0.07 0.20</ambient><diffuse>0.90 0.10 0.07 0.20</diffuse></material>
           <transparency>0.80</transparency>
         </visual>
         <visual name="berm_center">
-          <pose>5.38 0.90 0.020 0 0 0</pose>
+          <pose>5.38 0.90 0.420 0 0 0</pose>
           <geometry><cylinder><radius>0.06</radius><length>0.012</length></cylinder></geometry>
           <material><ambient>0.08 0.95 0.22 1</ambient><diffuse>0.08 0.95 0.22 1</diffuse></material>
         </visual>
@@ -111,14 +109,14 @@
     <model name="arena_walls">
       <static>true</static>
       <link name="walls">
-        <collision name="south_collision"><pose>3.44 -0.05 0.30 0 0 0</pose><geometry><box><size>6.98 0.10 0.60</size></box></geometry></collision>
-        <visual name="south_visual"><pose>3.44 -0.05 0.30 0 0 0</pose><geometry><box><size>6.98 0.10 0.60</size></box></geometry><material><ambient>0.48 0.50 0.53 1</ambient><diffuse>0.60 0.62 0.66 1</diffuse></material></visual>
-        <collision name="north_collision"><pose>3.44 5.05 0.30 0 0 0</pose><geometry><box><size>6.98 0.10 0.60</size></box></geometry></collision>
-        <visual name="north_visual"><pose>3.44 5.05 0.30 0 0 0</pose><geometry><box><size>6.98 0.10 0.60</size></box></geometry><material><ambient>0.48 0.50 0.53 1</ambient><diffuse>0.60 0.62 0.66 1</diffuse></material></visual>
-        <collision name="west_collision"><pose>-0.05 2.50 0.30 0 0 0</pose><geometry><box><size>0.10 5.00 0.60</size></box></geometry></collision>
-        <visual name="west_visual"><pose>-0.05 2.50 0.30 0 0 0</pose><geometry><box><size>0.10 5.00 0.60</size></box></geometry><material><ambient>0.48 0.50 0.53 1</ambient><diffuse>0.60 0.62 0.66 1</diffuse></material></visual>
-        <collision name="east_collision"><pose>6.93 2.50 0.30 0 0 0</pose><geometry><box><size>0.10 5.00 0.60</size></box></geometry></collision>
-        <visual name="east_visual"><pose>6.93 2.50 0.30 0 0 0</pose><geometry><box><size>0.10 5.00 0.60</size></box></geometry><material><ambient>0.48 0.50 0.53 1</ambient><diffuse>0.60 0.62 0.66 1</diffuse></material></visual>
+        <collision name="south_collision"><pose>3.44 -0.05 0.70 0 0 0</pose><geometry><box><size>6.98 0.10 0.60</size></box></geometry></collision>
+        <visual name="south_visual"><pose>3.44 -0.05 0.70 0 0 0</pose><geometry><box><size>6.98 0.10 0.60</size></box></geometry><material><ambient>0.48 0.50 0.53 1</ambient><diffuse>0.60 0.62 0.66 1</diffuse></material></visual>
+        <collision name="north_collision"><pose>3.44 5.05 0.70 0 0 0</pose><geometry><box><size>6.98 0.10 0.60</size></box></geometry></collision>
+        <visual name="north_visual"><pose>3.44 5.05 0.70 0 0 0</pose><geometry><box><size>6.98 0.10 0.60</size></box></geometry><material><ambient>0.48 0.50 0.53 1</ambient><diffuse>0.60 0.62 0.66 1</diffuse></material></visual>
+        <collision name="west_collision"><pose>-0.05 2.50 0.70 0 0 0</pose><geometry><box><size>0.10 5.00 0.60</size></box></geometry></collision>
+        <visual name="west_visual"><pose>-0.05 2.50 0.70 0 0 0</pose><geometry><box><size>0.10 5.00 0.60</size></box></geometry><material><ambient>0.48 0.50 0.53 1</ambient><diffuse>0.60 0.62 0.66 1</diffuse></material></visual>
+        <collision name="east_collision"><pose>6.93 2.50 0.70 0 0 0</pose><geometry><box><size>0.10 5.00 0.60</size></box></geometry></collision>
+        <visual name="east_visual"><pose>6.93 2.50 0.70 0 0 0</pose><geometry><box><size>0.10 5.00 0.60</size></box></geometry><material><ambient>0.48 0.50 0.53 1</ambient><diffuse>0.60 0.62 0.66 1</diffuse></material></visual>
       </link>
     </model>
 
@@ -126,19 +124,19 @@
     <model name="perimeter_ducts">
       <static>true</static>
       <link name="ducts">
-        <collision name="south_collision"><pose>3.44 0.085 0.085 0 1.570796 0</pose><geometry><cylinder><radius>0.085</radius><length>6.71</length></cylinder></geometry></collision>
-        <visual name="south_visual"><pose>3.44 0.085 0.085 0 1.570796 0</pose><geometry><cylinder><radius>0.085</radius><length>6.71</length></cylinder></geometry><material><ambient>0.78 0.78 0.75 1</ambient><diffuse>0.88 0.88 0.84 1</diffuse></material></visual>
-        <collision name="north_collision"><pose>3.44 4.915 0.085 0 1.570796 0</pose><geometry><cylinder><radius>0.085</radius><length>6.71</length></cylinder></geometry></collision>
-        <visual name="north_visual"><pose>3.44 4.915 0.085 0 1.570796 0</pose><geometry><cylinder><radius>0.085</radius><length>6.71</length></cylinder></geometry><material><ambient>0.78 0.78 0.75 1</ambient><diffuse>0.88 0.88 0.84 1</diffuse></material></visual>
-        <collision name="west_collision"><pose>0.085 2.50 0.085 1.570796 0 0</pose><geometry><cylinder><radius>0.085</radius><length>4.66</length></cylinder></geometry></collision>
-        <visual name="west_visual"><pose>0.085 2.50 0.085 1.570796 0 0</pose><geometry><cylinder><radius>0.085</radius><length>4.66</length></cylinder></geometry><material><ambient>0.78 0.78 0.75 1</ambient><diffuse>0.88 0.88 0.84 1</diffuse></material></visual>
-        <collision name="east_collision"><pose>6.795 2.50 0.085 1.570796 0 0</pose><geometry><cylinder><radius>0.085</radius><length>4.66</length></cylinder></geometry></collision>
-        <visual name="east_visual"><pose>6.795 2.50 0.085 1.570796 0 0</pose><geometry><cylinder><radius>0.085</radius><length>4.66</length></cylinder></geometry><material><ambient>0.78 0.78 0.75 1</ambient><diffuse>0.88 0.88 0.84 1</diffuse></material></visual>
+        <collision name="south_collision"><pose>3.44 0.085 0.485 0 1.570796 0</pose><geometry><cylinder><radius>0.085</radius><length>6.71</length></cylinder></geometry></collision>
+        <visual name="south_visual"><pose>3.44 0.085 0.485 0 1.570796 0</pose><geometry><cylinder><radius>0.085</radius><length>6.71</length></cylinder></geometry><material><ambient>0.78 0.78 0.75 1</ambient><diffuse>0.88 0.88 0.84 1</diffuse></material></visual>
+        <collision name="north_collision"><pose>3.44 4.915 0.485 0 1.570796 0</pose><geometry><cylinder><radius>0.085</radius><length>6.71</length></cylinder></geometry></collision>
+        <visual name="north_visual"><pose>3.44 4.915 0.485 0 1.570796 0</pose><geometry><cylinder><radius>0.085</radius><length>6.71</length></cylinder></geometry><material><ambient>0.78 0.78 0.75 1</ambient><diffuse>0.88 0.88 0.84 1</diffuse></material></visual>
+        <collision name="west_collision"><pose>0.085 2.50 0.485 1.570796 0 0</pose><geometry><cylinder><radius>0.085</radius><length>4.66</length></cylinder></geometry></collision>
+        <visual name="west_visual"><pose>0.085 2.50 0.485 1.570796 0 0</pose><geometry><cylinder><radius>0.085</radius><length>4.66</length></cylinder></geometry><material><ambient>0.78 0.78 0.75 1</ambient><diffuse>0.88 0.88 0.84 1</diffuse></material></visual>
+        <collision name="east_collision"><pose>6.795 2.50 0.485 1.570796 0 0</pose><geometry><cylinder><radius>0.085</radius><length>4.66</length></cylinder></geometry></collision>
+        <visual name="east_visual"><pose>6.795 2.50 0.485 1.570796 0 0</pose><geometry><cylinder><radius>0.085</radius><length>4.66</length></cylinder></geometry><material><ambient>0.78 0.78 0.75 1</ambient><diffuse>0.88 0.88 0.84 1</diffuse></material></visual>
       </link>
     </model>
 
     <model name="central_support_column">
-      <static>true</static><pose>3.44 2.50 1.25 0 0 0</pose>
+      <static>true</static><pose>3.44 2.50 1.65 0 0 0</pose>
       <link name="column">
         <collision name="collision"><geometry><box><size>0.45 0.45 2.50</size></box></geometry></collision>
         <visual name="visual"><geometry><box><size>0.45 0.45 2.50</size></box></geometry><material><ambient>0.70 0.12 0.10 1</ambient><diffuse>0.82 0.18 0.14 1</diffuse></material></visual>
@@ -147,11 +145,11 @@
 
     <!-- Irregular low-poly mesh rocks; diameters remain in the 30-40 cm range. -->
     <!-- Visual meshes use simple box collisions to avoid DART / ODE custom-mesh crashes. -->
-    <model name="rock_obstacle_1"><static>true</static><pose>3.05 4.48 0.02 0.08 -0.05 0.45</pose><link name="rock"><collision name="collision"><pose>0 0 0.058 0 0 0</pose><geometry><box><size>0.34 0.27 0.17</size></box></geometry></collision><visual name="visual"><geometry><mesh><uri>meshes/lunar_rock.obj</uri><scale>0.21 0.18 0.18</scale></mesh></geometry><material><ambient>0.25 0.23 0.20 1</ambient><diffuse>0.34 0.31 0.27 1</diffuse></material></visual></link></model>
-    <model name="rock_obstacle_2"><static>true</static><pose>3.95 2.05 0.02 -0.06 0.04 1.20</pose><link name="rock"><collision name="collision"><pose>0 0 0.052 0 0 0</pose><geometry><box><size>0.29 0.30 0.15</size></box></geometry></collision><visual name="visual"><geometry><mesh><uri>meshes/lunar_rock.obj</uri><scale>0.18 0.20 0.16</scale></mesh></geometry><material><ambient>0.28 0.25 0.21 1</ambient><diffuse>0.37 0.33 0.28 1</diffuse></material></visual></link></model>
-    <model name="rock_obstacle_3"><static>true</static><pose>5.35 4.30 0.02 0.04 0.07 2.10</pose><link name="rock"><collision name="collision"><pose>0 0 0.061 0 0 0</pose><geometry><box><size>0.32 0.25 0.18</size></box></geometry></collision><visual name="visual"><geometry><mesh><uri>meshes/lunar_rock.obj</uri><scale>0.20 0.17 0.19</scale></mesh></geometry><material><ambient>0.26 0.24 0.21 1</ambient><diffuse>0.35 0.32 0.28 1</diffuse></material></visual></link></model>
-    <model name="rock_obstacle_4"><static>true</static><pose>6.25 2.20 0.02 -0.05 -0.04 0.85</pose><link name="rock"><collision name="collision"><pose>0 0 0.055 0 0 0</pose><geometry><box><size>0.28 0.31 0.16</size></box></geometry></collision><visual name="visual"><geometry><mesh><uri>meshes/lunar_rock.obj</uri><scale>0.17 0.21 0.17</scale></mesh></geometry><material><ambient>0.27 0.24 0.20 1</ambient><diffuse>0.36 0.32 0.27 1</diffuse></material></visual></link></model>
-    <model name="rock_excavation_1"><static>true</static><pose>0.70 3.70 0.02 0.03 -0.06 1.60</pose><link name="rock"><collision name="collision"><pose>0 0 0.058 0 0 0</pose><geometry><box><size>0.31 0.25 0.17</size></box></geometry></collision><visual name="visual"><geometry><mesh><uri>meshes/lunar_rock.obj</uri><scale>0.19 0.17 0.18</scale></mesh></geometry><material><ambient>0.26 0.23 0.20 1</ambient><diffuse>0.35 0.31 0.27 1</diffuse></material></visual></link></model>
-    <model name="rock_excavation_2"><static>true</static><pose>1.82 2.70 0.02 -0.04 0.05 2.65</pose><link name="rock"><collision name="collision"><pose>0 0 0.052 0 0 0</pose><geometry><box><size>0.32 0.28 0.15</size></box></geometry></collision><visual name="visual"><geometry><mesh><uri>meshes/lunar_rock.obj</uri><scale>0.20 0.19 0.16</scale></mesh></geometry><material><ambient>0.28 0.25 0.21 1</ambient><diffuse>0.37 0.33 0.28 1</diffuse></material></visual></link></model>
+    <model name="rock_obstacle_1"><static>true</static><pose>3.05 4.48 0.436 0.08 -0.05 0.45</pose><link name="rock"><collision name="collision"><pose>0 0 0.058 0 0 0</pose><geometry><box><size>0.34 0.27 0.17</size></box></geometry></collision><visual name="visual"><geometry><mesh><uri>meshes/lunar_rock.obj</uri><scale>0.21 0.18 0.18</scale></mesh></geometry><material><ambient>0.25 0.23 0.20 1</ambient><diffuse>0.34 0.31 0.27 1</diffuse></material></visual></link></model>
+    <model name="rock_obstacle_2"><static>true</static><pose>3.95 2.05 0.445 -0.06 0.04 1.20</pose><link name="rock"><collision name="collision"><pose>0 0 0.052 0 0 0</pose><geometry><box><size>0.29 0.30 0.15</size></box></geometry></collision><visual name="visual"><geometry><mesh><uri>meshes/lunar_rock.obj</uri><scale>0.18 0.20 0.16</scale></mesh></geometry><material><ambient>0.28 0.25 0.21 1</ambient><diffuse>0.37 0.33 0.28 1</diffuse></material></visual></link></model>
+    <model name="rock_obstacle_3"><static>true</static><pose>5.35 4.30 0.428 0.04 0.07 2.10</pose><link name="rock"><collision name="collision"><pose>0 0 0.061 0 0 0</pose><geometry><box><size>0.32 0.25 0.18</size></box></geometry></collision><visual name="visual"><geometry><mesh><uri>meshes/lunar_rock.obj</uri><scale>0.20 0.17 0.19</scale></mesh></geometry><material><ambient>0.26 0.24 0.21 1</ambient><diffuse>0.35 0.32 0.28 1</diffuse></material></visual></link></model>
+    <model name="rock_obstacle_4"><static>true</static><pose>6.25 2.20 0.441 -0.05 -0.04 0.85</pose><link name="rock"><collision name="collision"><pose>0 0 0.055 0 0 0</pose><geometry><box><size>0.28 0.31 0.16</size></box></geometry></collision><visual name="visual"><geometry><mesh><uri>meshes/lunar_rock.obj</uri><scale>0.17 0.21 0.17</scale></mesh></geometry><material><ambient>0.27 0.24 0.20 1</ambient><diffuse>0.36 0.32 0.27 1</diffuse></material></visual></link></model>
+    <model name="rock_excavation_1"><static>true</static><pose>0.70 3.70 0.464 0.03 -0.06 1.60</pose><link name="rock"><collision name="collision"><pose>0 0 0.058 0 0 0</pose><geometry><box><size>0.31 0.25 0.17</size></box></geometry></collision><visual name="visual"><geometry><mesh><uri>meshes/lunar_rock.obj</uri><scale>0.19 0.17 0.18</scale></mesh></geometry><material><ambient>0.26 0.23 0.20 1</ambient><diffuse>0.35 0.31 0.27 1</diffuse></material></visual></link></model>
+    <model name="rock_excavation_2"><static>true</static><pose>1.82 2.70 0.380 -0.04 0.05 2.65</pose><link name="rock"><collision name="collision"><pose>0 0 0.052 0 0 0</pose><geometry><box><size>0.32 0.28 0.15</size></box></geometry></collision><visual name="visual"><geometry><mesh><uri>meshes/lunar_rock.obj</uri><scale>0.20 0.19 0.16</scale></mesh></geometry><material><ambient>0.28 0.25 0.21 1</ambient><diffuse>0.37 0.33 0.28 1</diffuse></material></visual></link></model>
   </world>
 </sdf>
