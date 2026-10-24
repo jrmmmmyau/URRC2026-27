@@ -80,7 +80,7 @@ private:
 
 	    if (twice_error < dx) {
 	    	error += dx;
-		x += sy;
+		y += sy;
 	    }
 	}
     }
@@ -160,7 +160,7 @@ private:
                         continue;
                     }
 
-                //    markRay(grid, origin_col, origin_row, col, grid_row);
+                    markRay(grid, origin_col, origin_row, col, grid_row);
 
 		    const size_t endpoint = static_cast<size_t>(grid_row) * width_ + col;
 		    grid[endpoint] = 100;
