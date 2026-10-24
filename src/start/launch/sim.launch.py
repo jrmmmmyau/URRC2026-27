@@ -51,7 +51,8 @@ def generate_launch_description():
             '/cmd_vel/camera@std_msgs/msg/Float64]gz.msgs.Double',
         ],
         remappings=[
-            ('/world/empty/model/melbot/joint_state', '/joint_states')
+            ('/world/empty/model/melbot/joint_state', '/joint_states'),
+            ('/imu','/imu_data')
         ],
         output='screen'
     )
@@ -60,6 +61,12 @@ def generate_launch_description():
     driver_node = Node(
         package='driver',
         executable='driver_node',
+        output='screen'
+    )
+
+    driver_node = Node(
+        package='imu_driver',
+        executable='imu_odom',
         output='screen'
     )
 
