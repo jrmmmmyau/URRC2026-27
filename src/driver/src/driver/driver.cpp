@@ -39,7 +39,11 @@ Driver::Driver() : Node("driver") {
       "/cmd_vel/rl_wheel", 10);
   rr_wheel_pub_ = create_publisher<std_msgs::msg::Float64>(
       "/cmd_vel/rr_wheel", 10);
-
+  camera_vel_pub_ = create_publisher<std_msgs::msg::Float64>( //this is for the camera, delete this in the future
+    "/cmd_vel/camera", 10);
+    
+  
+  
   timer_ = create_wall_timer(
       std::chrono::milliseconds(20),
       std::bind(&Driver::publish_commands, this));
@@ -124,12 +128,12 @@ bool Driver::wheels_are_aligned() const {
     return false;
   }
 
-  // RCLCPP_INFO(this->get_logger(),
-  //   "Errors: FL=%.3f | FR=%.3f | RL=%.3f | RR=%.3f",
-  //   angle_error(fl_target_, fl_angle_),
-  //   angle_error(fr_target_, fr_angle_),
-  //   angle_error(rl_target_, rl_angle_),
-  //   angle_error(rr_target_, rr_angle_));
+  RCLCPP_INFO(this->get_logger(),
+    "Errors: FL=%.3f | FR=%.3f | RL=%.3f | RR=%.3f",
+    angle_error(fl_target_, fl_angle_),
+    angle_error(fr_target_, fr_angle_),
+    angle_error(rl_target_, rl_angle_),
+    angle_error(rr_target_, rr_angle_));
 
   return std::abs(angle_error(fl_target_ , fl_angle_)) < steering_tolerance &&
          std::abs(angle_error(fr_target_ , fr_angle_)) < steering_tolerance &&
@@ -179,6 +183,9 @@ void Driver::publish_commands() {
   fr_wheel_pub_->publish(fr_wheel);
   rl_wheel_pub_->publish(rl_wheel);
   rr_wheel_pub_->publish(rr_wheel);
+  std_msgs::msg::Float64 camera_msg;
+  camera_msg.data = 1.0;
+  camera_vel_pub_->publish(camera_msg);
 }
 
 }  // namespace driver
