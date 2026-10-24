@@ -9,7 +9,6 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
     pkg_share=get_package_share_directory('description')
     urdf_path=os.path.join(pkg_share, 'urdf', 'basic_robot.urdf')
-    world_path=os.path.join(pkg_share, 'worlds', 'lunabotics_arena.sdf')
     ros_gz_sim=get_package_share_directory('ros_gz_sim')
     rsp_node=Node(
         package='robot_state_publisher',
@@ -20,16 +19,12 @@ def generate_launch_description():
 
     gazebo=IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(ros_gz_sim, 'launch','gz_sim.launch.py')]),
-        launch_arguments={'gz_args': f'{world_path} -r'}.items()
+        launch_arguments={'gz_args':'empty.sdf -r'}.items()
     )
     spawn_node=Node(
         package='ros_gz_sim',
         executable='create',
-        arguments=[
-            '-topic', 'robot_description',
-            '-name', 'melbot',
-            '-x', '1.0', '-y', '0.75', '-z', '0.35', '-Y', '0.0'
-        ],
+        arguments=['-topic','robot_description','-name','melbot','-z','0.5'],
         output='screen'
     )
     # convert to gz format
@@ -45,10 +40,10 @@ def generate_launch_description():
             '/cmd_vel/fr_wheel@std_msgs/msg/Float64]gz.msgs.Double',
             '/cmd_vel/rl_wheel@std_msgs/msg/Float64]gz.msgs.Double',
             '/cmd_vel/rr_wheel@std_msgs/msg/Float64]gz.msgs.Double',
-            '/world/lunabotics_arena/model/melbot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model',
+            '/world/empty/model/lunabot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model',
         ],
         remappings=[
-            ('/world/lunabotics_arena/model/melbot/joint_state', '/joint_states')
+            ('/world/empty/model/lunabot/joint_state', '/joint_states')
         ],
         output='screen'
     )
