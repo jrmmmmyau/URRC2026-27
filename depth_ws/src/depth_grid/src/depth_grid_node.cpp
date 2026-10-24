@@ -66,9 +66,9 @@ private:
 	    {
 		const size_t index = static_cast<size_t>(y) * width_ + x;
 	
-		if (grid[index] != 100) 
+		if (grid[index] == -1) 
 		{
-		    grid[index] = 0;
+		    grid[index] = 100;
 		}
 	    }
 
@@ -156,7 +156,12 @@ private:
                     markRay(grid, origin_col, origin_row, col, grid_row);
 
 		    const size_t endpoint = static_cast<size_t>(grid_row) * width_ + col;
-		    grid[endpoint] = 100;
+		    
+		    // map dist to grayscale
+		    const int shade = static_cast<int>(
+				    std::clamp((z / 4.0) * 100.0, 0.0, 100.0)
+		    );
+		    grid[endpoint] = static_cast<int8_t>(shade);
                 }
             }
 
