@@ -6,7 +6,7 @@ This repository contains the Melbot ROS 2 simulation and six Gazebo terrain vari
 
 - Ubuntu with ROS 2 Jazzy
 - Gazebo Harmonic and the ROS–Gazebo (`ros_gz`) packages
-- `colcon`
+- `colcon`, `rosdep`, and Xacro (`ros-jazzy-xacro`)
 
 ## First-time setup
 
@@ -15,6 +15,7 @@ Open a terminal in the repository and build the workspace:
 ```bash
 cd ~/URRC2026-27
 source /opt/ros/jazzy/setup.bash
+rosdep install --from-paths src --ignore-src -r -y
 colcon build --packages-up-to start
 source install/setup.bash
 ```
@@ -48,7 +49,11 @@ If `world` is omitted, terrain `1` is used:
 ros2 launch start terrain_teleop.launch.py
 ```
 
-The terrain launcher starts Gazebo, spawns Melbot, starts the ROS–Gazebo bridges, and runs the driver node. It also uses the OGRE 1 renderer to avoid the shader crash seen on some integrated graphics systems.
+The terrain launcher starts Gazebo, spawns the camera/IMU-equipped Melbot,
+starts the ROS–Gazebo bridges, and runs the driver node. The GUI still uses
+OGRE 1 for compatibility with integrated graphics. The separate server-side
+RGB-D sensor renderer requires OGRE 2 support; forcing the server to OGRE 1
+will prevent the RGB-D cameras from working.
 
 The six terrain variants and the flat Lunabotics arena include the historical
 seven-rock line joining the south perimeter to the central column at the
@@ -66,6 +71,39 @@ ros2 launch start teleop.launch.py
 
 This launch file uses `map/worlds/lunabotics_arena.sdf`.
 The flat arena has varied-size crater markers, not actual holes.
+
+The older command `ros2 launch start sim.launch.py` is also supported and
+includes this same flat-arena launcher.
+
+## Cameras and IMU
+
+Both map launchers expand the new Xacro robot description. The robot includes
+front and top RGB-D cameras, the rotating top-camera mount, and an IMU.
+The IMU intentionally has no visible mesh; check its data rather than looking
+for an IMU box in Gazebo.
+
+The ROS bridges expose `/imu` plus `/front_camera/image`,
+`/front_camera/depth_image`, `/front_camera/camera_info`, and
+`/front_camera/points`. The top camera has the same topic suffixes under
+`/top_camera`. The launchers also bridge the world clock to `/clock` and use
+simulation time. The URDF branch's driver rotates the top-camera mount through
+`/cmd_vel/camera`.
+
+After launching, check data from a second terminal sourced to the same workspace:
+
+```bash
+ros2 topic echo /imu --once
+ros2 topic hz /front_camera/image
+```
+
+Topic presence alone does not prove that sensor messages are arriving. Use
+the commands above to check actual messages and rates. Close any old Gazebo
+process and rebuild `description`, `driver`, and `start` after this update:
+
+```bash
+colcon build --packages-up-to start
+source install/setup.bash
+```
 
 ## Launch the original arena world only
 
@@ -153,3 +191,14 @@ The `world` argument only accepts the values `1`, `2`, `3`, `4`, `5`, and `6`.
 ## Map files
 
 Worlds, terrain assets, and generation scripts are organized under [`map/`](map/README.md). Regenerating the maps is not required just to launch the simulation.
+
+## Regression checks
+
+```bash
+python3 -m unittest discover -s map/scripts -p 'test_*.py' -v
+python3 -m unittest discover -s src/start/test -p 'test_*.py' -v
+```
+
+The sensor checks validate launch wiring, world-level sensor systems, and
+Xacro expansion when `xacro` is installed. They do not replace a live Gazebo
+camera, IMU, and teleop test.

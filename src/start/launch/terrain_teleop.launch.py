@@ -6,6 +6,7 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Opaq
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def launch_setup(context):
@@ -21,18 +22,20 @@ def launch_setup(context):
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[{'robot_description': Command(['cat ', urdf_path])}],
+        parameters=[{
+            'robot_description': ParameterValue(Command(['xacro ', urdf_path]), value_type=str),
+            'use_sim_time': True,
+        }],
     )
 
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [os.path.join(ros_gz_sim, 'launch', 'gz_sim.launch.py')]
         ),
-        # Ogre2 heightmap shaders crash on some integrated GPUs. The world uses
-        # a normal-equipped terrain mesh for Ogre1 visuals and a heightfield for
-        # collisions, avoiding that unsupported shader path entirely.
+        # Keep the Ogre1 GUI workaround. RGB-D sensors render separately on the
+        # server and require Ogre2, so do not force both renderers to Ogre1.
         launch_arguments={
-            'gz_args': f'{world_path} -r --render-engine ogre'
+            'gz_args': f'{world_path} -r --render-engine-gui ogre --render-engine-server ogre2'
         }.items(),
     )
 
@@ -60,14 +63,29 @@ def launch_setup(context):
             '/cmd_vel/rl_wheel@std_msgs/msg/Float64]gz.msgs.Double',
             '/cmd_vel/rr_wheel@std_msgs/msg/Float64]gz.msgs.Double',
             '/world/lunabotics_terrain_arena/model/melbot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model',
+            '/world/lunabotics_terrain_arena/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+            '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
+            '/cmd_vel/camera@std_msgs/msg/Float64]gz.msgs.Double',
+            '/front_camera/image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/front_camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/front_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            '/front_camera/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
+            '/top_camera/image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/top_camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image',
+            '/top_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+            '/top_camera/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
         ],
         remappings=[
-            ('/world/lunabotics_terrain_arena/model/melbot/joint_state', '/joint_states')
+            ('/world/lunabotics_terrain_arena/model/melbot/joint_state', '/joint_states'),
+            ('/world/lunabotics_terrain_arena/clock', '/clock'),
         ],
         output='screen',
     )
 
-    driver_node = Node(package='driver', executable='driver_node', output='screen')
+    driver_node = Node(
+        package='driver', executable='driver_node', output='screen',
+        parameters=[{'use_sim_time': True}],
+    )
 
     return [rsp_node, gazebo, spawn_node, bridge_node, driver_node]
 
