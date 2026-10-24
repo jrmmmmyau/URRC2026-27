@@ -25,9 +25,9 @@ public:
         cy_ = 241.0266876220703;
 
         resolution_ = 0.05;
-        x_min_ = -1.0;
+        x_min_ = -2.0;
         z_min_ = 0.0;
-        width_ = 40;
+        width_ = 80;
         height_ = 80;
 
         depth_sub_ = create_subscription<sensor_msgs::msg::Image>(
@@ -102,20 +102,13 @@ private:
         const cv::Mat & depth = cv_ptr->image;
 
 	if (depth.empty()) return;
-	// log 1
-	RCLCPP_INFO(
-		get_logger(),
-		"Recieved depth image: %d * %d",
-		depth.cols,
-		depth.rows
-	);
 
    
 
 
         std::vector<int8_t> grid(static_cast<size_t>(width_) * height_, -1);
    
-        RCLCPP_INFO(get_logger(), "checkpoint 2: grid init");
+        //RCLCPP_INFO(get_logger(), "checkpoint 2: grid init");
 
     	// camera origin projected onto depth grid
 	const int origin_col = static_cast<int>(std::floor((0.0 - x_min_) / resolution_));
@@ -167,7 +160,6 @@ private:
                 }
             }
 
-	    RCLCPP_INFO(get_logger(), "checkpoint 3, pixel processing done");
 
             nav_msgs::msg::OccupancyGrid out;
             out.header.stamp = msg->header.stamp;
@@ -184,13 +176,6 @@ private:
 
             out.data = std::move(grid);
 
-	    // log
-	    RCLCPP_INFO(
-		get_logger(),
-		"pub grid %d * %d",
-		out.info.width,
-		out.info.height
-            );
             grid_pub_->publish(out);
 
     }
