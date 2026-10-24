@@ -79,25 +79,55 @@
       </link>
     </model>
 
-    <!-- Flat operational markers align with areas flattened in the heightmap. -->
-    <model name="operational_markings">
+    <!--
+      High-contrast visual-only zone markings follow Figure 9 of the guidebook.
+      Blue: excavation, amber: obstacle, magenta: construction, green: start,
+      and red: the official 2.2 m x 0.9 m berm scoring box.
+    -->
+    <model name="zone_markings">
       <static>true</static>
       <link name="markings">
-        <!-- Solid border avoids transparent-plane depth sorting artifacts. -->
-        <visual name="starting_zone_south"><pose>1.00 0.02 0.406 0 0 0</pose><geometry><box><size>2.00 0.04 0.012</size></box></geometry><material><ambient>0.15 0.75 0.22 1</ambient><diffuse>0.15 0.75 0.22 1</diffuse></material></visual>
-        <visual name="starting_zone_north"><pose>1.00 1.48 0.406 0 0 0</pose><geometry><box><size>2.00 0.04 0.012</size></box></geometry><material><ambient>0.15 0.75 0.22 1</ambient><diffuse>0.15 0.75 0.22 1</diffuse></material></visual>
-        <visual name="starting_zone_west"><pose>0.02 0.75 0.406 0 0 0</pose><geometry><box><size>0.04 1.50 0.012</size></box></geometry><material><ambient>0.15 0.75 0.22 1</ambient><diffuse>0.15 0.75 0.22 1</diffuse></material></visual>
-        <visual name="starting_zone_east"><pose>1.98 0.75 0.406 0 0 0</pose><geometry><box><size>0.04 1.50 0.012</size></box></geometry><material><ambient>0.15 0.75 0.22 1</ambient><diffuse>0.15 0.75 0.22 1</diffuse></material></visual>
-        <visual name="berm_target">
-          <pose>5.38 0.90 0.408 0 0 0</pose>
-          <geometry><box><size>2.20 0.90 0.016</size></box></geometry>
-          <material><ambient>0.90 0.10 0.07 0.20</ambient><diffuse>0.90 0.10 0.07 0.20</diffuse></material>
-          <transparency>0.80</transparency>
-        </visual>
+        <!-- Starting zone, inset from the pipe so all four sides stay visible. -->
+        <visual name="start_south"><pose>1.09 0.20 0.452 0 0 0</pose><geometry><box><size>1.82 0.055 0.025</size></box></geometry><material><ambient>0.08 0.95 0.22 1</ambient><diffuse>0.08 0.95 0.22 1</diffuse><emissive>0.03 0.35 0.08 1</emissive></material></visual>
+        <visual name="start_north"><pose>1.09 1.50 0.452 0 0 0</pose><geometry><box><size>1.82 0.055 0.025</size></box></geometry><material><ambient>0.08 0.95 0.22 1</ambient><diffuse>0.08 0.95 0.22 1</diffuse><emissive>0.03 0.35 0.08 1</emissive></material></visual>
+        <visual name="start_west"><pose>0.18 0.85 0.452 0 0 0</pose><geometry><box><size>0.055 1.30 0.025</size></box></geometry><material><ambient>0.08 0.95 0.22 1</ambient><diffuse>0.08 0.95 0.22 1</diffuse><emissive>0.03 0.35 0.08 1</emissive></material></visual>
+        <visual name="start_east"><pose>2.00 0.85 0.452 0 0 0</pose><geometry><box><size>0.055 1.30 0.025</size></box></geometry><material><ambient>0.08 0.95 0.22 1</ambient><diffuse>0.08 0.95 0.22 1</diffuse><emissive>0.03 0.35 0.08 1</emissive></material></visual>
+
+        <!-- Excavation zone: x=0..2.5 m, including the starting zone. -->
+        <visual name="excavation_north"><pose>1.34 4.80 0.452 0 0 0</pose><geometry><box><size>2.32 0.045 0.025</size></box></geometry><material><ambient>0.04 0.62 1 1</ambient><diffuse>0.04 0.62 1 1</diffuse><emissive>0.02 0.22 0.38 1</emissive></material></visual>
+        <visual name="excavation_west"><pose>0.18 2.50 0.452 0 0 0</pose><geometry><box><size>0.045 4.60 0.025</size></box></geometry><material><ambient>0.04 0.62 1 1</ambient><diffuse>0.04 0.62 1 1</diffuse><emissive>0.02 0.22 0.38 1</emissive></material></visual>
+        <visual name="excavation_east"><pose>2.48 2.50 0.452 0 0 0</pose><geometry><box><size>0.045 4.60 0.025</size></box></geometry><material><ambient>0.04 0.62 1 1</ambient><diffuse>0.04 0.62 1 1</diffuse><emissive>0.02 0.22 0.38 1</emissive></material></visual>
+
+        <!-- L-shaped obstacle region surrounding the construction zone. -->
+        <visual name="obstacle_north"><pose>4.59 4.80 0.456 0 0 0</pose><geometry><box><size>4.18 0.045 0.025</size></box></geometry><material><ambient>1 0.66 0.03 1</ambient><diffuse>1 0.66 0.03 1</diffuse><emissive>0.38 0.20 0.01 1</emissive></material></visual>
+        <visual name="obstacle_east"><pose>6.68 3.15 0.456 0 0 0</pose><geometry><box><size>0.045 3.30 0.025</size></box></geometry><material><ambient>1 0.66 0.03 1</ambient><diffuse>1 0.66 0.03 1</diffuse><emissive>0.38 0.20 0.01 1</emissive></material></visual>
+        <visual name="obstacle_construction_edge"><pose>5.06 1.53 0.456 0 0 0</pose><geometry><box><size>3.24 0.045 0.025</size></box></geometry><material><ambient>1 0.66 0.03 1</ambient><diffuse>1 0.66 0.03 1</diffuse><emissive>0.38 0.20 0.01 1</emissive></material></visual>
+        <visual name="obstacle_lower_west"><pose>2.52 0.85 0.456 0 0 0</pose><geometry><box><size>0.045 1.30 0.025</size></box></geometry><material><ambient>1 0.66 0.03 1</ambient><diffuse>1 0.66 0.03 1</diffuse><emissive>0.38 0.20 0.01 1</emissive></material></visual>
+        <visual name="obstacle_lower_south"><pose>2.98 0.20 0.456 0 0 0</pose><geometry><box><size>0.92 0.045 0.025</size></box></geometry><material><ambient>1 0.66 0.03 1</ambient><diffuse>1 0.66 0.03 1</diffuse><emissive>0.38 0.20 0.01 1</emissive></material></visual>
+        <visual name="obstacle_lower_east"><pose>3.44 0.85 0.456 0 0 0</pose><geometry><box><size>0.045 1.30 0.025</size></box></geometry><material><ambient>1 0.66 0.03 1</ambient><diffuse>1 0.66 0.03 1</diffuse><emissive>0.38 0.20 0.01 1</emissive></material></visual>
+
+        <!-- Construction zone: rightmost half of the lower 1.5 m. -->
+        <visual name="construction_south"><pose>5.06 0.17 0.460 0 0 0</pose><geometry><box><size>3.24 0.055 0.025</size></box></geometry><material><ambient>0.95 0.12 0.72 1</ambient><diffuse>0.95 0.12 0.72 1</diffuse><emissive>0.34 0.04 0.24 1</emissive></material></visual>
+        <visual name="construction_north"><pose>5.06 1.50 0.460 0 0 0</pose><geometry><box><size>3.24 0.055 0.025</size></box></geometry><material><ambient>0.95 0.12 0.72 1</ambient><diffuse>0.95 0.12 0.72 1</diffuse><emissive>0.34 0.04 0.24 1</emissive></material></visual>
+        <visual name="construction_west"><pose>3.44 0.84 0.460 0 0 0</pose><geometry><box><size>0.055 1.33 0.025</size></box></geometry><material><ambient>0.95 0.12 0.72 1</ambient><diffuse>0.95 0.12 0.72 1</diffuse><emissive>0.34 0.04 0.24 1</emissive></material></visual>
+        <visual name="construction_east"><pose>6.68 0.84 0.460 0 0 0</pose><geometry><box><size>0.055 1.33 0.025</size></box></geometry><material><ambient>0.95 0.12 0.72 1</ambient><diffuse>0.95 0.12 0.72 1</diffuse><emissive>0.34 0.04 0.24 1</emissive></material></visual>
+
+        <!-- Official berm scoring boundary; a border stays visible over regolith. -->
+        <visual name="berm_south"><pose>5.38 0.45 0.466 0 0 0</pose><geometry><box><size>2.20 0.055 0.025</size></box></geometry><material><ambient>1 0.08 0.04 1</ambient><diffuse>1 0.08 0.04 1</diffuse><emissive>0.38 0.02 0.01 1</emissive></material></visual>
+        <visual name="berm_north"><pose>5.38 1.35 0.466 0 0 0</pose><geometry><box><size>2.20 0.055 0.025</size></box></geometry><material><ambient>1 0.08 0.04 1</ambient><diffuse>1 0.08 0.04 1</diffuse><emissive>0.38 0.02 0.01 1</emissive></material></visual>
+        <visual name="berm_west"><pose>4.28 0.90 0.466 0 0 0</pose><geometry><box><size>0.055 0.90 0.025</size></box></geometry><material><ambient>1 0.08 0.04 1</ambient><diffuse>1 0.08 0.04 1</diffuse><emissive>0.38 0.02 0.01 1</emissive></material></visual>
+        <visual name="berm_east"><pose>6.48 0.90 0.466 0 0 0</pose><geometry><box><size>0.055 0.90 0.025</size></box></geometry><material><ambient>1 0.08 0.04 1</ambient><diffuse>1 0.08 0.04 1</diffuse><emissive>0.38 0.02 0.01 1</emissive></material></visual>
+
+        <!-- Mesh lettering avoids font and texture dependencies in Gazebo. -->
+        <visual name="start_label"><pose>1.09 1.31 0.472 0 0 0</pose><geometry><mesh><uri>meshes/zone_labels/start.obj</uri></mesh></geometry><material><ambient>0.08 0.95 0.22 1</ambient><diffuse>0.08 0.95 0.22 1</diffuse><emissive>0.03 0.35 0.08 1</emissive></material></visual>
+        <visual name="excavation_label"><pose>1.30 4.60 0.472 0 0 0</pose><geometry><mesh><uri>meshes/zone_labels/excavation.obj</uri></mesh></geometry><material><ambient>0.04 0.62 1 1</ambient><diffuse>0.04 0.62 1 1</diffuse><emissive>0.02 0.22 0.38 1</emissive></material></visual>
+        <visual name="obstacle_label"><pose>4.60 4.60 0.472 0 0 0</pose><geometry><mesh><uri>meshes/zone_labels/obstacle.obj</uri></mesh></geometry><material><ambient>1 0.66 0.03 1</ambient><diffuse>1 0.66 0.03 1</diffuse><emissive>0.38 0.20 0.01 1</emissive></material></visual>
+        <visual name="construction_label"><pose>5.08 1.29 0.478 0 0 0</pose><geometry><mesh><uri>meshes/zone_labels/construction.obj</uri></mesh></geometry><material><ambient>0.95 0.12 0.72 1</ambient><diffuse>0.95 0.12 0.72 1</diffuse><emissive>0.34 0.04 0.24 1</emissive></material></visual>
+        <visual name="berm_label"><pose>5.38 0.56 0.480 0 0 0</pose><geometry><mesh><uri>meshes/zone_labels/berm.obj</uri></mesh></geometry><material><ambient>1 0.08 0.04 1</ambient><diffuse>1 0.08 0.04 1</diffuse><emissive>0.38 0.02 0.01 1</emissive></material></visual>
         <visual name="berm_center">
-          <pose>5.38 0.90 0.420 0 0 0</pose>
+          <pose>5.38 0.90 0.480 0 0 0</pose>
           <geometry><cylinder><radius>0.06</radius><length>0.012</length></cylinder></geometry>
-          <material><ambient>0.08 0.95 0.22 1</ambient><diffuse>0.08 0.95 0.22 1</diffuse></material>
+          <material><ambient>1 0.08 0.04 1</ambient><diffuse>1 0.08 0.04 1</diffuse><emissive>0.38 0.02 0.01 1</emissive></material>
         </visual>
       </link>
     </model>
