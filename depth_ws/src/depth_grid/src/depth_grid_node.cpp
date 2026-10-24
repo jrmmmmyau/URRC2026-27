@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <utility>
 #include <cmath>
 #include <cstdint>
 #include <memory>
@@ -45,6 +47,44 @@ public:
     }
 
 private:
+
+    void markRay(std::vector<int8_t> & grid, int x0, int y0, int x1, int y1)
+    {
+	const int dx = std::abs(x1 - x0);
+	const int dy = std::abs(y1 - y0);
+
+	const int sx = (x0 < x1) ? 1 : -1;
+	const int sy = (y0 < y1) ? 1 : -1;
+
+	int error = dx - dy;
+	int x = x0;
+	int y = y0;
+
+	while (x != x1 || y != y1) 
+	{
+	    if (x >= 0 && x < width_ && y >= 0 && y < height_)
+	    {
+		const size_t index = static_cast<size_t>(y) * width_ + x;
+	
+		if (grid[index] != 100) 
+		{
+		    grid[index] = 0;
+		}
+	    }
+
+	    const int twice_error = 2 * error;
+	    if (twice_error > -dy) {
+	    	error -= dy;
+		x += sx;
+	    }
+
+	    if (twice_error < dx) {
+	    	error += dx;
+		x += sy;
+	    }
+	}
+    }
+
     void depthCallback(
         const sensor_msgs::msg::Image::SharedPtr msg)
     {
@@ -60,13 +100,33 @@ private:
         }
 
         const cv::Mat & depth = cv_ptr->image;
-        if (depth.empty()) {
-            return;
-        }
 
-        std::vector<int8_t> grid(
-            static_cast<size_t>(width_) * height_, -1);
-            for (int v = 0; v < depth.rows; v += 4) {
+	if (depth.empty()) return;
+	// log 1
+	RCLCPP_INFO(
+		get_logger(),
+		"Recieved depth image: %d * %d",
+		depth.cols,
+		depth.rows
+	);
+
+   
+
+
+        std::vector<int8_t> grid(static_cast<size_t>(width_) * height_, -1);
+   
+        RCLCPP_INFO(get_logger(), "checkpoint 2: grid init");
+
+    	// camera origin projected onto depth grid
+	const int origin_col = static_cast<int>(std::floor((0.0 - x_min_) / resolution_));
+
+	const int origin_row = static_cast<int>(std::floor((0.0 - z_min_) / resolution_));
+
+	const double x_max = x_min_ + width_ * resolution_;
+	const double z_max = z_min_ + height_ * resolution_;
+
+
+    	for (int v = 0; v < depth.rows; v += 4) {
                 const uint16_t * row =
                     depth.ptr<uint16_t>(v);
 
@@ -85,6 +145,11 @@ private:
 
                     const double x = (static_cast<double>(u) - cx_) * z / fx_;
 
+		    if (x < x_min_ || x >= x_max ||
+			z < z_min_ || z >= z_max) {
+		    	continue;
+		    }
+
                     const int col = static_cast<int>(
                         std::floor((x - x_min_) / resolution_));
                     const int grid_row = static_cast<int>(
@@ -95,11 +160,14 @@ private:
                         continue;
                     }
 
-                    grid[
-                        static_cast<size_t>(grid_row) * width_ + col
-                    ] = 100;
+                //    markRay(grid, origin_col, origin_row, col, grid_row);
+
+		    const size_t endpoint = static_cast<size_t>(grid_row) * width_ + col;
+		    grid[endpoint] = 100;
                 }
             }
+
+	    RCLCPP_INFO(get_logger(), "checkpoint 3, pixel processing done");
 
             nav_msgs::msg::OccupancyGrid out;
             out.header.stamp = msg->header.stamp;
@@ -116,6 +184,13 @@ private:
 
             out.data = std::move(grid);
 
+	    // log
+	    RCLCPP_INFO(
+		get_logger(),
+		"pub grid %d * %d",
+		out.info.width,
+		out.info.height
+            );
             grid_pub_->publish(out);
 
     }
