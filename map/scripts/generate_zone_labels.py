@@ -61,7 +61,7 @@ def generate_label(word: str, cell: float, output: Path) -> None:
 
 
 if __name__ == "__main__":
-    destination = Path(__file__).resolve().parent / "meshes" / "zone_labels"
+    destination = Path(__file__).resolve().parent.parent / "assets" / "shared" / "zone_labels"
     for filename, (word, cell) in LABELS.items():
         path = destination / f"{filename}.obj"
         generate_label(word, cell, path)

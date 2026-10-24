@@ -19,13 +19,18 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
-# Install repository-level Gazebo worlds with the robot description package so
-# launch files do not depend on a developer-specific absolute workspace path.
+# Install organized Gazebo worlds and their shared / per-variant assets.
 install(
-  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../map/
-  DESTINATION share/${PROJECT_NAME}/worlds
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../map/worlds
+  DESTINATION share/${PROJECT_NAME}
   FILES_MATCHING
     PATTERN "*.sdf"
+)
+
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../map/assets
+  DESTINATION share/${PROJECT_NAME}
+  FILES_MATCHING
     PATTERN "*.png"
     PATTERN "*.obj"
 )

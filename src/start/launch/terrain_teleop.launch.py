@@ -2,16 +2,19 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command
+from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 
 
-def generate_launch_description():
+def launch_setup(context):
+    variant = LaunchConfiguration('world').perform(context)
     description_share = get_package_share_directory('description')
     urdf_path = os.path.join(description_share, 'urdf', 'basic_robot.urdf')
-    world_path = os.path.join(description_share, 'worlds', 'lunabotics_terrain_arena.sdf')
+    world_path = os.path.join(
+        description_share, 'worlds', f'lunabotics_terrain_{int(variant):02d}.sdf'
+    )
     ros_gz_sim = get_package_share_directory('ros_gz_sim')
 
     rsp_node = Node(
@@ -66,6 +69,16 @@ def generate_launch_description():
 
     driver_node = Node(package='driver', executable='driver_node', output='screen')
 
-    return LaunchDescription(
-        [rsp_node, gazebo, spawn_node, bridge_node, driver_node]
-    )
+    return [rsp_node, gazebo, spawn_node, bridge_node, driver_node]
+
+
+def generate_launch_description():
+    return LaunchDescription([
+        DeclareLaunchArgument(
+            'world',
+            default_value='1',
+            choices=['1', '2', '3', '4', '5', '6'],
+            description='Lunabotics terrain and obstacle-layout variant',
+        ),
+        OpaqueFunction(function=launch_setup),
+    ])
