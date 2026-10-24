@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate six deterministic Lunabotics Gazebo terrain worlds.
+"""Generate six deterministic terrain worlds and refresh flat-world obstacles.
 
 Broad terrain grades are limited to 15 degrees. Competition crater walls are
 discrete obstacles and intentionally excluded from that broad-grade limit.
@@ -8,6 +8,7 @@ discrete obstacles and intentionally excluded from that broad-grade limit.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 import math
 import random
 from pathlib import Path
@@ -34,6 +35,19 @@ ROCK_NAMES = (
     "rock_obstacle_1", "rock_obstacle_2", "rock_obstacle_3",
     "rock_obstacle_4", "rock_excavation_1", "rock_excavation_2",
 )
+CONSTRUCTION_ROCK_NAMES = tuple(f"rock_construction_{index}" for index in range(1, 8))
+# Join the south perimeter duct to the column's south face (y=2.275 m).
+CONSTRUCTION_ROCK_POSITIONS = tuple((3.44, .28 + .31 * index) for index in range(7))
+# Local width, length, and height above the rock origin, in metres.
+ROCK_SIZES = (
+    (.30, .27, .15), (.35, .31, .20), (.40, .35, .26),
+    (.32, .28, .17), (.38, .33, .23), (.34, .30, .19),
+)
+CONSTRUCTION_ROCK_SIZES = (
+    (.38, .36, .24), (.36, .35, .22), (.40, .37, .28),
+    (.37, .36, .23), (.39, .35, .26), (.38, .36, .25),
+    (.40, .37, .27),
+)
 
 
 @dataclass(frozen=True)
@@ -50,22 +64,22 @@ class Variant:
 
 VARIANTS = (
     Variant(1, "Central Ridge", 202701, "ridge",
-            ((3.25, 3.80, .24, .28, .055), (4.55, 2.85, .25, .34, .065), (6.00, 3.70, .23, .30, .060)),
+            ((3.25, 3.80, .15, .16, .035), (4.55, 2.85, .20, .25, .050), (6.00, 3.70, .25, .34, .065)),
             ((3.05, 4.48, .08, -.05, .45), (3.95, 2.05, -.06, .04, 1.20), (5.35, 4.30, .04, .07, 2.10), (6.25, 2.20, -.05, -.04, .85), (.70, 3.70, .03, -.06, 1.60), (1.82, 2.70, -.04, .05, 2.65))),
     Variant(2, "Rolling Dunes", 202702, "waves",
-            ((3.10, 3.25, .23, .27, .055), (4.70, 4.05, .25, .31, .060), (6.05, 2.75, .24, .29, .058)),
+            ((3.10, 3.25, .20, .24, .050), (4.70, 4.05, .25, .32, .065), (6.05, 2.75, .15, .15, .035)),
             ((2.90, 4.35, .05, -.06, .30), (4.10, 2.05, -.04, .06, 1.55), (5.45, 3.30, .06, .03, 2.40), (6.15, 4.35, -.05, -.05, .95), (.65, 2.70, .03, -.04, 1.30), (1.75, 4.10, -.05, .04, 2.80))),
     Variant(3, "Diagonal Ridge", 202703, "diagonal",
-            ((3.15, 4.10, .24, .30, .060), (4.85, 2.40, .23, .28, .055), (6.10, 3.55, .25, .33, .065)),
+            ((3.15, 4.10, .25, .33, .065), (4.85, 2.40, .15, .16, .035), (6.10, 3.55, .20, .25, .050)),
             ((2.85, 2.00, .06, -.04, .60), (4.05, 3.50, -.05, .05, 1.40), (5.30, 4.40, .04, .06, 2.25), (6.15, 2.10, -.06, -.03, .80), (.75, 4.10, .03, -.05, 1.75), (1.85, 2.60, -.04, .05, 2.55))),
     Variant(4, "Twin Mounds", 202704, "twins",
-            ((2.95, 2.90, .23, .27, .055), (4.40, 4.15, .24, .30, .060), (5.95, 2.65, .25, .34, .065)),
+            ((2.95, 2.90, .15, .15, .035), (4.40, 4.15, .25, .34, .065), (5.95, 2.65, .20, .24, .050)),
             ((3.00, 4.40, .07, -.05, .35), (4.15, 2.05, -.05, .05, 1.65), (5.30, 3.60, .05, .06, 2.30), (6.30, 4.20, -.04, -.06, 1.05), (.60, 3.30, .04, -.04, 1.45), (1.90, 4.40, -.05, .03, 2.75))),
     Variant(5, "Broad Basin", 202705, "basin",
-            ((3.10, 3.90, .24, .29, .058), (4.70, 2.00, .23, .27, .055), (6.15, 3.10, .25, .32, .063)),
+            ((3.10, 3.90, .20, .25, .050), (4.70, 2.00, .15, .16, .035), (6.15, 3.10, .25, .32, .065)),
             ((2.90, 2.10, .05, -.05, .50), (4.05, 3.00, -.06, .04, 1.35), (5.35, 4.25, .04, .07, 2.50), (6.25, 4.50, -.05, -.04, .90), (.80, 2.80, .03, -.06, 1.55), (1.70, 4.00, -.04, .05, 2.70))),
     Variant(6, "Cross Slope", 202706, "cross",
-            ((3.00, 2.00, .23, .28, .055), (4.60, 3.65, .25, .33, .065), (6.00, 2.40, .24, .30, .060)),
+            ((3.00, 2.00, .25, .33, .065), (4.60, 3.65, .20, .24, .050), (6.00, 2.40, .15, .15, .035)),
             ((3.00, 4.40, .06, -.05, .40), (4.00, 2.60, -.05, .06, 1.50), (5.40, 2.00, .05, .04, 2.20), (6.20, 4.10, -.06, -.04, 1.00), (.70, 3.70, .03, -.05, 1.65), (1.80, 2.60, -.04, .05, 2.60))),
 )
 
@@ -256,6 +270,46 @@ def generate_assets(variant: Variant) -> tuple[list[int], float, float]:
     return pixels, scale, broad_angle
 
 
+def gazebo_surface_height(pixels: list[int], x: float, y: float) -> float:
+    """Sample world z, not design elevation (which is 0.40 m lower).
+
+    Gazebo interprets black as z=0 and white as z=HEIGHT_RANGE. The OBJ
+    uses that same frame; adding MIN_HEIGHT here would bury every rock.
+    """
+    column = x / ARENA_X * (IMAGE_SIZE - 1)
+    row = (1.0 - y / ARENA_Y) * (IMAGE_SIZE - 1)
+    left, top = math.floor(column), math.floor(row)
+    right, bottom = min(left + 1, IMAGE_SIZE - 1), min(top + 1, IMAGE_SIZE - 1)
+    fx, fy = column - left, row - top
+    upper = (1.0 - fx) * pixels[top * IMAGE_SIZE + left] + fx * pixels[top * IMAGE_SIZE + right]
+    lower = (1.0 - fx) * pixels[bottom * IMAGE_SIZE + left] + fx * pixels[bottom * IMAGE_SIZE + right]
+    return HEIGHT_RANGE * ((1.0 - fy) * upper + fy * lower) / 255.0
+
+
+@lru_cache(maxsize=1)
+def rock_mesh_bounds() -> tuple[tuple[float, float], ...]:
+    lines = (ASSETS_ROOT / "shared" / "lunar_rock.obj").read_text().splitlines()
+    vertices = [tuple(map(float, line.split()[1:4])) for line in lines if line.startswith("v ")]
+    return tuple((min(axis), max(axis)) for axis in zip(*vertices))
+
+
+def resize_rock(model: ET.Element, dimensions: tuple[float, float, float]) -> None:
+    """Scale the visual and its safe box collision from the same OBJ bounds."""
+    bounds = rock_mesh_bounds()
+    width, length, height = dimensions
+    scales = (width / (bounds[0][1] - bounds[0][0]),
+              length / (bounds[1][1] - bounds[1][0]), height / bounds[2][1])
+    mesh_scale = model.find("./link/visual/geometry/mesh/scale")
+    collision_pose = model.find("./link/collision/pose")
+    collision_size = model.find("./link/collision/geometry/box/size")
+    assert mesh_scale is not None and collision_pose is not None and collision_size is not None
+    mesh_scale.text = " ".join(f"{value:.6f}" for value in scales)
+    center = [(low + high) * scale / 2.0 for (low, high), scale in zip(bounds, scales)]
+    size = [(high - low) * scale for (low, high), scale in zip(bounds, scales)]
+    collision_pose.text = " ".join(f"{value:.6f}" for value in center) + " 0 0 0"
+    collision_size.text = " ".join(f"{value:.6f}" for value in size)
+
+
 def generate_world(variant: Variant, pixels: list[int]) -> Path:
     parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
     tree = ET.parse(TEMPLATE_PATH, parser=parser)
@@ -270,19 +324,67 @@ def generate_world(variant: Variant, pixels: list[int]) -> Path:
     collision_uri.text = f"../assets/terrain_{variant.number:02d}/heightmap.png"
     visual_uri.text = f"../assets/terrain_{variant.number:02d}/terrain.obj"
 
-    for name, rock in zip(ROCK_NAMES, variant.rocks):
+    for index, (name, rock) in enumerate(zip(ROCK_NAMES, variant.rocks)):
         model = world.find(f"./model[@name='{name}']")
         assert model is not None
         x, y, roll, pitch, yaw = rock
-        column = round(x / ARENA_X * (IMAGE_SIZE - 1))
-        row = round((1.0 - y / ARENA_Y) * (IMAGE_SIZE - 1))
-        surface = MIN_HEIGHT + HEIGHT_RANGE * pixels[row * IMAGE_SIZE + column] / 255.0
+        surface = gazebo_surface_height(pixels, x, y)
         pose = model.find("pose")
         assert pose is not None
         pose.text = f"{x:.2f} {y:.2f} {surface + .020:.3f} {roll:.2f} {pitch:.2f} {yaw:.2f}"
+        resize_rock(model, ROCK_SIZES[(index + variant.number - 1) % len(ROCK_SIZES)])
+
+    for name, (x, y), size in zip(CONSTRUCTION_ROCK_NAMES, CONSTRUCTION_ROCK_POSITIONS, CONSTRUCTION_ROCK_SIZES):
+        model = world.find(f"./model[@name='{name}']")
+        assert model is not None
+        surface = gazebo_surface_height(pixels, x, y)
+        pose = model.find("pose")
+        assert pose is not None
+        orientation = pose.text.split()[3:]
+        pose.text = f"{x:.2f} {y:.2f} {surface + .020:.3f} {' '.join(orientation)}"
+        resize_rock(model, size)
 
     ET.indent(tree, space="  ")
     output = WORLDS_ROOT / f"lunabotics_terrain_{variant.number:02d}.sdf"
+    tree.write(output, encoding="UTF-8", xml_declaration=True)
+    return output
+
+
+def update_flat_world() -> Path:
+    """Keep the flat arena's obstacles consistent without raising its grade."""
+    output = WORLDS_ROOT / "lunabotics_arena.sdf"
+    parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
+    tree = ET.parse(output, parser=parser)
+    world = tree.getroot().find("world")
+    assert world is not None
+    for name, (x, y), size in zip(CONSTRUCTION_ROCK_NAMES, CONSTRUCTION_ROCK_POSITIONS, CONSTRUCTION_ROCK_SIZES):
+        model = world.find(f"./model[@name='{name}']")
+        assert model is not None
+        pose = model.find("pose")
+        assert pose is not None
+        orientation = pose.text.split()[3:]
+        pose.text = f"{x:.2f} {y:.2f} 0.020 {' '.join(orientation)}"
+        resize_rock(model, size)
+
+    for name, size in zip(ROCK_NAMES, ROCK_SIZES):
+        model = world.find(f"./model[@name='{name.replace('rock_', 'boulder_')}']")
+        assert model is not None
+        radius = size[0] / 2.0
+        for element in model.findall(".//sphere/radius"):
+            element.text = f"{radius:.3f}"
+        pose = model.find("pose")
+        assert pose is not None
+        values = pose.text.split()
+        values[2] = f"{radius - .04:.3f}"
+        pose.text = " ".join(values)
+
+    for index, radius in enumerate((.15, .20, .25), start=1):
+        model = world.find(f"./model[@name='crater_obstacle_{index}']")
+        assert model is not None
+        for element in model.findall(".//cylinder/radius"):
+            element.text = f"{radius:.3f}"
+
+    ET.indent(tree, space="  ")
     tree.write(output, encoding="UTF-8", xml_declaration=True)
     return output
 
@@ -295,6 +397,7 @@ def main() -> None:
         if broad_angle > MAX_BROAD_SLOPE_DEGREES:
             raise RuntimeError(f"Variant {variant.number} broad slope is {broad_angle:.2f} degrees")
         print(f"{world.name}: {variant.title}; relief scale={scale:.3f}; broad slope={broad_angle:.2f} deg")
+    print(f"{update_flat_world().name}: refreshed barrier, rock sizes, and crater markers")
 
 
 if __name__ == "__main__":
