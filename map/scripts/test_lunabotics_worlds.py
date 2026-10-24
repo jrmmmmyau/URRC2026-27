@@ -108,10 +108,30 @@ class WorldGeometryTests(unittest.TestCase):
             heightmap = model.find("./link/collision/geometry/heightmap")
             size = numbers(heightmap, "size")
             with Image.open(path.parent / heightmap.findtext("uri")) as image:
+                peak = image.getextrema()[1]
                 for x, y, z in mesh.points:
                     column = round((x / size[0] + .5) * (image.width - 1))
                     row = round((.5 - y / size[1]) * (image.height - 1))
-                    self.assertAlmostEqual(z, image.getpixel((column, row)) * size[2] / 255, delta=1e-6)
+                    # Gazebo's DART heightmap scales by the image peak, not 255.
+                    collision_z = image.getpixel((column, row)) * size[2] / peak
+                    self.assertAlmostEqual(z, collision_z, delta=1e-6,
+                                           msg=path.name)
+
+    def test_spawn_collision_matches_visible_ground_in_every_terrain(self):
+        for _, path, world, mesh in self.worlds:
+            with self.subTest(world=path.name):
+                model = world.find("./model[@name='bp1_heightmap_terrain']")
+                heightmap = model.find("./link/collision/geometry/heightmap")
+                size = numbers(heightmap, "size")
+                with Image.open(path.parent / heightmap.findtext("uri")) as image:
+                    peak = image.getextrema()[1]
+                    self.assertGreater(peak, 0)
+                    self.assertLess(peak, 255, "fixture must exercise peak normalization")
+                    column = round(1.0 / size[0] * (image.width - 1))
+                    row = round((1.0 - .75 / size[1]) * (image.height - 1))
+                    collision_z = numbers(model, "pose")[2] + image.getpixel((column, row)) * size[2] / peak
+                self.assertAlmostEqual(collision_z, .40, delta=1e-6)
+                self.assertAlmostEqual(collision_z, mesh.height(1.0, .75), delta=1e-6)
 
     def test_rocks_are_visible_not_buried_or_floating(self):
         cases = [(p, w, m.height) for _, p, w, m in self.worlds]

@@ -33,8 +33,10 @@
       </attenuation>
     </light>
     <!--
-      The PNG encodes the [-0.40 m, +0.45 m] design range into Gazebo's
-      [0.00 m, 0.85 m] heightfield range. Nominal grade is z=0.40 m.
+      The PNG encodes the [-0.40 m, +0.45 m] design range into the mesh's
+      [0.00 m, 0.85 m] height range. Nominal grade is z=0.40 m.
+      The generator sets collision size.z to 0.85 * peak_pixel / 255,
+      compensating for Gazebo's image-peak normalization to match the mesh.
       Relative paths keep the installed world relocatable.
     -->
     <model name="bp1_heightmap_terrain">
@@ -45,7 +47,7 @@
           <geometry>
             <heightmap>
               <uri>../assets/terrain_01/heightmap.png</uri>
-              <size>6.88 5.00 0.85</size>
+              <size>6.88 5.00 0.550000000000</size>
               <sampling>1</sampling>
             </heightmap>
           </geometry>

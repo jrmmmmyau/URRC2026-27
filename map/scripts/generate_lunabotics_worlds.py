@@ -273,8 +273,9 @@ def generate_assets(variant: Variant) -> tuple[list[int], float, float]:
 def gazebo_surface_height(pixels: list[int], x: float, y: float) -> float:
     """Sample world z, not design elevation (which is 0.40 m lower).
 
-    Gazebo interprets black as z=0 and white as z=HEIGHT_RANGE. The OBJ
-    uses that same frame; adding MIN_HEIGHT here would bury every rock.
+    The OBJ uses the PNG's 0..255 scale. generate_world compensates for
+    Gazebo's image-peak normalization in the collision heightmap's size.z.
+    Adding MIN_HEIGHT here would bury every rock.
     """
     column = x / ARENA_X * (IMAGE_SIZE - 1)
     row = (1.0 - y / ARENA_Y) * (IMAGE_SIZE - 1)
@@ -319,9 +320,14 @@ def generate_world(variant: Variant, pixels: list[int]) -> Path:
     terrain = world.find("./model[@name='bp1_heightmap_terrain']")
     assert terrain is not None
     collision_uri = terrain.find("./link/collision/geometry/heightmap/uri")
+    collision_size = terrain.find("./link/collision/geometry/heightmap/size")
     visual_uri = terrain.find("./link/visual/geometry/mesh/uri")
-    assert collision_uri is not None and visual_uri is not None
+    assert collision_uri is not None and collision_size is not None and visual_uri is not None
     collision_uri.text = f"../assets/terrain_{variant.number:02d}/heightmap.png"
+    # DART scales image heights by their peak pixel, not the full 8-bit range.
+    # Cancel that normalization so collisions retain the OBJ's pixel/255 scale.
+    collision_height = HEIGHT_RANGE * max(pixels) / 255.0
+    collision_size.text = f"{ARENA_X:.2f} {ARENA_Y:.2f} {collision_height:.12f}"
     visual_uri.text = f"../assets/terrain_{variant.number:02d}/terrain.obj"
 
     for index, (name, rock) in enumerate(zip(ROCK_NAMES, variant.rocks)):
