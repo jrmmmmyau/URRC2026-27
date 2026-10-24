@@ -50,6 +50,12 @@ ros2 launch start terrain_teleop.launch.py
 
 The terrain launcher starts Gazebo, spawns Melbot, starts the ROS–Gazebo bridges, and runs the driver node. It also uses the OGRE 1 renderer to avoid the shader crash seen on some integrated graphics systems.
 
+The six terrain variants and the flat Lunabotics arena include the historical
+seven-rock line joining the south perimeter to the central column at the
+construction-zone entrance. This closes the short route south of the column.
+Scattered rocks vary from 30 to 40 cm in local width, and the numbered worlds
+have real craters with 30, 40, and 50 cm rim diameters and different depths.
+
 ## Launch the flat Lunabotics arena
 
 To launch the simpler flat arena with Melbot and the driver:
@@ -59,6 +65,7 @@ ros2 launch start teleop.launch.py
 ```
 
 This launch file uses `map/worlds/lunabotics_arena.sdf`.
+The flat arena has varied-size crater markers, not actual holes.
 
 ## Launch the original arena world only
 
@@ -106,7 +113,7 @@ ros2 pkg prefix description
 
 The final command should print a path ending in `URRC2026-27/install/description`.
 
-### Gazebo still shows an older or flatter terrain
+### Gazebo still shows older terrain or missing rocks
 
 Rebuild the packages that install the worlds and launch files, then source the result:
 
@@ -127,6 +134,17 @@ The output should contain:
 ```xml
 <size>6.88 5.00 0.85</size>
 ```
+
+The heightfield size alone does not identify the rock-placement fix. Confirm
+the installed barrier also reaches the column:
+
+```bash
+grep 'rock_construction_7' install/description/share/description/worlds/lunabotics_terrain_01.sdf
+```
+
+Close and relaunch Gazebo after rebuilding; an open simulation does not reload
+changed world files. Terrain rocks must be placed in Gazebo's world-height
+frame (nominal grade 0.40 m), not the design-height frame (nominal grade 0 m).
 
 ### Invalid terrain number
 

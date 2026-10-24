@@ -646,17 +646,17 @@
         </visual>
       </link>
     </model>
-    <!-- Irregular low-poly mesh rocks; diameters remain in the 30-40 cm range. -->
-    <!-- Visual meshes use simple box collisions to avoid DART / ODE custom-mesh crashes. -->
-    <model name="rock_obstacle_1">
+    <!-- Historical construction-zone entrance: a continuous rock line beside the column. -->
+    <!-- Seven generated rocks join the south perimeter duct to the column. -->
+    <model name="rock_construction_1">
       <static>true</static>
-      <pose>2.90 4.35 0.010 0.05 -0.06 0.30</pose>
+      <pose>3.44 0.28 0.413 0 0 0.35</pose>
       <link name="rock">
         <collision name="collision">
-          <pose>0 0 0.058 0 0 0</pose>
+          <pose>0.002346 0.004865 0.098462 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.34 0.27 0.17</size>
+              <size>0.380000 0.360000 0.283077</size>
             </box>
           </geometry>
         </collision>
@@ -664,7 +664,191 @@
           <geometry>
             <mesh>
               <uri>../assets/shared/lunar_rock.obj</uri>
-              <scale>0.21 0.18 0.18</scale>
+              <scale>0.234568 0.243243 0.307692</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <ambient>0.25 0.23 0.20 1</ambient>
+            <diffuse>0.34 0.31 0.27 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="rock_construction_2">
+      <static>true</static>
+      <pose>3.44 0.59 0.413 0 0 1.10</pose>
+      <link name="rock">
+        <collision name="collision">
+          <pose>0.002222 0.004730 0.090256 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.360000 0.350000 0.259487</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>../assets/shared/lunar_rock.obj</uri>
+              <scale>0.222222 0.236486 0.282051</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <ambient>0.28 0.25 0.21 1</ambient>
+            <diffuse>0.37 0.33 0.28 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="rock_construction_3">
+      <static>true</static>
+      <pose>3.44 0.90 0.417 0 0 1.85</pose>
+      <link name="rock">
+        <collision name="collision">
+          <pose>0.002469 0.005000 0.114872 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.400000 0.370000 0.330256</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>../assets/shared/lunar_rock.obj</uri>
+              <scale>0.246914 0.250000 0.358974</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <ambient>0.26 0.24 0.21 1</ambient>
+            <diffuse>0.35 0.32 0.28 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="rock_construction_4">
+      <static>true</static>
+      <pose>3.44 1.21 0.420 0 0 2.55</pose>
+      <link name="rock">
+        <collision name="collision">
+          <pose>0.002284 0.004865 0.094359 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.370000 0.360000 0.271282</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>../assets/shared/lunar_rock.obj</uri>
+              <scale>0.228395 0.243243 0.294872</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <ambient>0.27 0.24 0.20 1</ambient>
+            <diffuse>0.36 0.32 0.27 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="rock_construction_5">
+      <static>true</static>
+      <pose>3.44 1.52 0.420 0 0 0.70</pose>
+      <link name="rock">
+        <collision name="collision">
+          <pose>0.002407 0.004730 0.106667 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.390000 0.350000 0.306667</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>../assets/shared/lunar_rock.obj</uri>
+              <scale>0.240741 0.236486 0.333333</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <ambient>0.26 0.23 0.20 1</ambient>
+            <diffuse>0.35 0.31 0.27 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="rock_construction_6">
+      <static>true</static>
+      <pose>3.44 1.83 0.461 0 0 1.45</pose>
+      <link name="rock">
+        <collision name="collision">
+          <pose>0.002346 0.004865 0.102564 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.380000 0.360000 0.294872</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>../assets/shared/lunar_rock.obj</uri>
+              <scale>0.234568 0.243243 0.320513</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <ambient>0.27 0.24 0.20 1</ambient>
+            <diffuse>0.36 0.32 0.27 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="rock_construction_7">
+      <static>true</static>
+      <pose>3.44 2.14 0.519 0 0 2.20</pose>
+      <link name="rock">
+        <collision name="collision">
+          <pose>0.002469 0.005000 0.110769 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.400000 0.370000 0.318462</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>../assets/shared/lunar_rock.obj</uri>
+              <scale>0.246914 0.250000 0.346154</scale>
+            </mesh>
+          </geometry>
+          <material>
+            <ambient>0.25 0.23 0.20 1</ambient>
+            <diffuse>0.34 0.31 0.27 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <!-- The generator assigns 30-40 cm widths and 15-26 cm heights. -->
+    <!-- Visual meshes use simple box collisions to avoid DART / ODE custom-mesh crashes. -->
+    <model name="rock_obstacle_1">
+      <static>true</static>
+      <pose>2.90 4.35 0.410 0.05 -0.06 0.30</pose>
+      <link name="rock">
+        <collision name="collision">
+          <pose>0.002160 0.004189 0.082051 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.350000 0.310000 0.235897</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>../assets/shared/lunar_rock.obj</uri>
+              <scale>0.216049 0.209459 0.256410</scale>
             </mesh>
           </geometry>
           <material>
@@ -676,13 +860,13 @@
     </model>
     <model name="rock_obstacle_2">
       <static>true</static>
-      <pose>4.10 2.05 0.080 -0.04 0.06 1.55</pose>
+      <pose>4.10 2.05 0.481 -0.04 0.06 1.55</pose>
       <link name="rock">
         <collision name="collision">
-          <pose>0 0 0.052 0 0 0</pose>
+          <pose>0.002469 0.004730 0.106667 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.29 0.30 0.15</size>
+              <size>0.400000 0.350000 0.306667</size>
             </box>
           </geometry>
         </collision>
@@ -690,7 +874,7 @@
           <geometry>
             <mesh>
               <uri>../assets/shared/lunar_rock.obj</uri>
-              <scale>0.18 0.20 0.16</scale>
+              <scale>0.246914 0.236486 0.333333</scale>
             </mesh>
           </geometry>
           <material>
@@ -702,13 +886,13 @@
     </model>
     <model name="rock_obstacle_3">
       <static>true</static>
-      <pose>5.45 3.30 0.020 0.06 0.03 2.40</pose>
+      <pose>5.45 3.30 0.420 0.06 0.03 2.40</pose>
       <link name="rock">
         <collision name="collision">
-          <pose>0 0 0.061 0 0 0</pose>
+          <pose>0.001975 0.003784 0.069744 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.32 0.25 0.18</size>
+              <size>0.320000 0.280000 0.200513</size>
             </box>
           </geometry>
         </collision>
@@ -716,7 +900,7 @@
           <geometry>
             <mesh>
               <uri>../assets/shared/lunar_rock.obj</uri>
-              <scale>0.20 0.17 0.19</scale>
+              <scale>0.197531 0.189189 0.217949</scale>
             </mesh>
           </geometry>
           <material>
@@ -728,13 +912,13 @@
     </model>
     <model name="rock_obstacle_4">
       <static>true</static>
-      <pose>6.15 4.35 0.020 -0.05 -0.05 0.95</pose>
+      <pose>6.15 4.35 0.420 -0.05 -0.05 0.95</pose>
       <link name="rock">
         <collision name="collision">
-          <pose>0 0 0.055 0 0 0</pose>
+          <pose>0.002346 0.004459 0.094359 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.28 0.31 0.16</size>
+              <size>0.380000 0.330000 0.271282</size>
             </box>
           </geometry>
         </collision>
@@ -742,7 +926,7 @@
           <geometry>
             <mesh>
               <uri>../assets/shared/lunar_rock.obj</uri>
-              <scale>0.17 0.21 0.17</scale>
+              <scale>0.234568 0.222973 0.294872</scale>
             </mesh>
           </geometry>
           <material>
@@ -754,13 +938,13 @@
     </model>
     <model name="rock_excavation_1">
       <static>true</static>
-      <pose>0.65 2.70 0.020 0.03 -0.04 1.30</pose>
+      <pose>0.65 2.70 0.420 0.03 -0.04 1.30</pose>
       <link name="rock">
         <collision name="collision">
-          <pose>0 0 0.058 0 0 0</pose>
+          <pose>0.002099 0.004054 0.077949 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.31 0.25 0.17</size>
+              <size>0.340000 0.300000 0.224103</size>
             </box>
           </geometry>
         </collision>
@@ -768,7 +952,7 @@
           <geometry>
             <mesh>
               <uri>../assets/shared/lunar_rock.obj</uri>
-              <scale>0.19 0.17 0.18</scale>
+              <scale>0.209877 0.202703 0.243590</scale>
             </mesh>
           </geometry>
           <material>
@@ -780,13 +964,13 @@
     </model>
     <model name="rock_excavation_2">
       <static>true</static>
-      <pose>1.75 4.10 0.020 -0.05 0.04 2.80</pose>
+      <pose>1.75 4.10 0.420 -0.05 0.04 2.80</pose>
       <link name="rock">
         <collision name="collision">
-          <pose>0 0 0.052 0 0 0</pose>
+          <pose>0.001852 0.003649 0.061538 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.32 0.28 0.15</size>
+              <size>0.300000 0.270000 0.176923</size>
             </box>
           </geometry>
         </collision>
@@ -794,7 +978,7 @@
           <geometry>
             <mesh>
               <uri>../assets/shared/lunar_rock.obj</uri>
-              <scale>0.20 0.19 0.16</scale>
+              <scale>0.185185 0.182432 0.192308</scale>
             </mesh>
           </geometry>
           <material>
