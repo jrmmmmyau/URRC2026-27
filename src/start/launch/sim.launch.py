@@ -64,10 +64,11 @@ def generate_launch_description():
         output='screen'
     )
 
-    driver_node = Node(
+    #run imu
+    imu_driver = Node(
         package='imu_driver',
         executable='imu_odom',
         output='screen'
     )
 
-    return LaunchDescription([rsp_node, gazebo, spawn_node, bridge_node, driver_node])
+    return LaunchDescription([rsp_node, gazebo, spawn_node, bridge_node, driver_node, imu_driver])
