@@ -49,13 +49,6 @@ target_link_libraries(navsrv "${cpp_typesupport_target}")
 add_executable(cmd_vel_publisher src/cmd_vel_publisher.cpp)
 ament_target_dependencies(cmd_vel_publisher rclcpp nav_msgs std_msgs geometry_msgs tf2)
 
-add_executable(map_publisher src/map_publisher.cpp)
-ament_target_dependencies(map_publisher rclcpp nav_msgs)
-
-add_executable(plan_client src/plan_client.cpp)
-ament_target_dependencies(plan_client rclcpp geometry_msgs nav_msgs)
-target_link_libraries(plan_client "${cpp_typesupport_target}")
-
 add_executable(test_map_publisher src/test_map_publisher.cpp)
 ament_target_dependencies(test_map_publisher rclcpp nav_msgs geometry_msgs ament_index_cpp)
 
@@ -73,9 +66,7 @@ install(TARGETS
   navsrv
   test_map_publisher
   cmd_vel_publisher
-  map_publisher
   map_verifier_server
-  plan_client
   cmd_vel_test_publisher
   DESTINATION lib/${PROJECT_NAME})
 
