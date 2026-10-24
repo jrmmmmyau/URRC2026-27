@@ -128,12 +128,12 @@ bool Driver::wheels_are_aligned() const {
     return false;
   }
 
-  // RCLCPP_INFO(this->get_logger(),
-  //   "Errors: FL=%.3f | FR=%.3f | RL=%.3f | RR=%.3f",
-  //   angle_error(fl_target_, fl_angle_),
-  //   angle_error(fr_target_, fr_angle_),
-  //   angle_error(rl_target_, rl_angle_),
-  //   angle_error(rr_target_, rr_angle_));
+  RCLCPP_INFO(this->get_logger(),
+    "Errors: FL=%.3f | FR=%.3f | RL=%.3f | RR=%.3f",
+    angle_error(fl_target_, fl_angle_),
+    angle_error(fr_target_, fr_angle_),
+    angle_error(rl_target_, rl_angle_),
+    angle_error(rr_target_, rr_angle_));
 
   return std::abs(angle_error(fl_target_ , fl_angle_)) < steering_tolerance &&
          std::abs(angle_error(fr_target_ , fr_angle_)) < steering_tolerance &&
