@@ -2,7 +2,7 @@
 """Generate deterministic BP-1 heightmap and render mesh for Gazebo.
 
 The height output is a 257 x 257 grayscale PNG (2^n + 1, as expected by
-Gazebo heightmaps). Pixel intensity maps linearly to [-0.40 m, +0.15 m].
+Gazebo heightmaps). Pixel intensity maps linearly to [-0.40 m, +0.30 m].
 The lower-resolution OBJ uses the same quantized elevations and explicit
 vertex normals so it renders reliably with both Ogre 1 and Ogre 2.
 """
@@ -21,7 +21,7 @@ ARENA_Y = 5.00
 IMAGE_SIZE = 257
 MESH_STEP = 2
 MIN_HEIGHT = -0.40
-HEIGHT_RANGE = 0.55
+HEIGHT_RANGE = 0.70
 RANDOM_SEED = 2027
 
 # x, y, rim radius, center depth, rim height (metres)
@@ -37,6 +37,24 @@ def smoothstep(edge0: float, edge1: float, value: float) -> float:
         return float(value >= edge1)
     t = max(0.0, min(1.0, (value - edge0) / (edge1 - edge0)))
     return t * t * (3.0 - 2.0 * t)
+
+
+def broad_relief_height(x: float, y: float) -> float:
+    """Return deliberately visible but traversable obstacle-field relief."""
+    # Fade the relief to zero at all zone boundaries. This produces a broad
+    # ridge, a steeper eastern shoulder, and a shallow western dip without
+    # disturbing the operationally flat start and construction surfaces.
+    x_window = smoothstep(2.50, 2.90, x) * (1.0 - smoothstep(6.48, 6.88, x))
+    y_window = smoothstep(1.50, 1.90, y) * (1.0 - smoothstep(4.20, 4.60, y))
+    window = x_window * y_window
+    broad_ridge = 0.095 * math.sin(math.pi * (x - 2.50) / (6.88 - 2.50))
+    eastern_shoulder = 0.085 * math.exp(
+        -(((x - 5.55) / 0.68) ** 2 + ((y - 2.35) / 0.58) ** 2)
+    )
+    western_dip = -0.055 * math.exp(
+        -(((x - 3.45) / 0.58) ** 2 + ((y - 2.35) / 0.72) ** 2)
+    )
+    return window * (broad_ridge + eastern_shoulder + western_dip)
 
 
 def crater_height(x: float, y: float) -> float:
@@ -74,7 +92,7 @@ def generate(output: Path) -> tuple[Path, Path, Path, Path]:
                 + 0.013 * math.sin(2.85 * x + 1.70 * y)
                 + 0.022 * noise_value
             )
-            elevation = undulation + crater_height(x, y)
+            elevation = undulation + broad_relief_height(x, y) + crater_height(x, y)
 
             # Preserve level operational surfaces with a short blended margin.
             start_distance = max(x - 2.00, y - 1.50)
@@ -159,7 +177,7 @@ def generate(output: Path) -> tuple[Path, Path, Path, Path]:
     # Ogre 1 has unreliable heightmap-material support on some integrated
     # GPUs. Use a conventional mesh for rendering while retaining the native
     # heightfield for efficient wheel collisions. Heights are shifted into
-    # Gazebo's [0, 0.55] heightfield coordinate range so both surfaces align.
+    # Gazebo's [0, 0.70] heightfield coordinate range so both surfaces align.
     mesh_path = output.parent.parent / "meshes" / "lunabotics_moon_terrain.obj"
     mesh_path.parent.mkdir(parents=True, exist_ok=True)
     selected = list(range(0, IMAGE_SIZE, MESH_STEP))
