@@ -2,8 +2,9 @@
 <!--
   NASA Lunabotics 2026-2027 arena with non-flat, collidable BP-1 terrain.
 
-  Unlike lunabotics_arena.sdf, the regolith visual and collision geometries use
-  the same heightmap. The three crater centers are actual depressions with
+  Unlike lunabotics_arena.sdf, the regolith collision uses a heightfield and
+  its visual uses a matching normal-equipped mesh. The three crater centers are
+  actual depressions with
   raised rims, not flat disk models:
     (3.25, 3.80), radius 0.24 m, depth 0.28 m
     (4.55, 2.85), radius 0.25 m, depth 0.34 m
@@ -11,7 +12,7 @@
 
   The starting zone, berm target, and perimeter are blended to nominal grade.
   The remaining surface contains deterministic low-frequency undulation.
-  Regenerate the PNG with generate_lunabotics_heightmap.py.
+  Regenerate both assets with generate_lunabotics_heightmap.py.
 -->
 <sdf version="1.10">
   <world name="lunabotics_terrain_arena">
@@ -35,6 +36,7 @@
 
     <light name="arena_lighting" type="directional">
       <pose>3.44 2.50 8 0 0 0</pose>
+      <visualize>false</visualize>
       <cast_shadows>true</cast_shadows>
       <intensity>1.15</intensity>
       <direction>-0.35 0.18 -0.92</direction>
@@ -65,19 +67,14 @@
             <friction><ode><mu>0.8</mu><mu2>0.8</mu2></ode></friction>
           </surface>
         </collision>
+        <!-- A mesh avoids Ogre 1's black heightmap-material rendering bug. -->
         <visual name="terrain_visual">
-          <geometry>
-            <heightmap>
-              <uri>heightmaps/lunabotics_moon_terrain.png</uri>
-              <size>6.88 5.00 0.55</size>
-              <sampling>1</sampling>
-              <texture>
-                <size>0.65</size>
-                <diffuse>heightmaps/lunabotics_regolith_diffuse.png</diffuse>
-                <normal>heightmaps/lunabotics_regolith_normal.png</normal>
-              </texture>
-            </heightmap>
-          </geometry>
+          <geometry><mesh><uri>meshes/lunabotics_moon_terrain.obj</uri></mesh></geometry>
+          <material>
+            <ambient>0.34 0.31 0.27 1</ambient>
+            <diffuse>0.48 0.44 0.38 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
         </visual>
       </link>
     </model>

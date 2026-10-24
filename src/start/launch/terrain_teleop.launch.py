@@ -25,8 +25,9 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             [os.path.join(ros_gz_sim, 'launch', 'gz_sim.launch.py')]
         ),
-        # Ogre2 heightmap shaders crash on some integrated GPUs. Ogre1 renders
-        # the same SDF heightmap without requiring those unsupported shaders.
+        # Ogre2 heightmap shaders crash on some integrated GPUs. The world uses
+        # a normal-equipped terrain mesh for Ogre1 visuals and a heightfield for
+        # collisions, avoiding that unsupported shader path entirely.
         launch_arguments={
             'gz_args': f'{world_path} -r --render-engine ogre'
         }.items(),

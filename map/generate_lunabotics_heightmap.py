@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Generate deterministic BP-1 height, diffuse, and normal maps for Gazebo.
+"""Generate deterministic BP-1 heightmap and render mesh for Gazebo.
 
 The height output is a 257 x 257 grayscale PNG (2^n + 1, as expected by
 Gazebo heightmaps). Pixel intensity maps linearly to [-0.40 m, +0.15 m].
+The lower-resolution OBJ uses the same quantized elevations and explicit
+vertex normals so it renders reliably with both Ogre 1 and Ogre 2.
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ from PIL import Image, ImageFilter
 ARENA_X = 6.88
 ARENA_Y = 5.00
 IMAGE_SIZE = 257
+MESH_STEP = 2
 MIN_HEIGHT = -0.40
 HEIGHT_RANGE = 0.55
 RANDOM_SEED = 2027
@@ -46,7 +49,7 @@ def crater_height(x: float, y: float) -> float:
     return height
 
 
-def generate(output: Path) -> tuple[Path, Path, Path]:
+def generate(output: Path) -> tuple[Path, Path, Path, Path]:
     random.seed(RANDOM_SEED)
 
     # Upscaled, blurred seeded noise gives non-periodic broad surface variation.
@@ -124,6 +127,7 @@ def generate(output: Path) -> tuple[Path, Path, Path]:
     dx = ARENA_X / (IMAGE_SIZE - 1)
     dy = ARENA_Y / (IMAGE_SIZE - 1)
     normal_pixels: list[tuple[int, int, int]] = []
+    normal_vectors: list[tuple[float, float, float]] = []
     for row in range(IMAGE_SIZE):
         row_before = max(0, row - 1)
         row_after = min(IMAGE_SIZE - 1, row + 1)
@@ -141,15 +145,61 @@ def generate(output: Path) -> tuple[Path, Path, Path]:
             ) / ((row_after - row_before) * dy)
             nx, ny, nz = -dz_dx, -dz_dy, 1.0
             magnitude = math.sqrt(nx * nx + ny * ny + nz * nz)
+            normal_vector = tuple(component / magnitude for component in (nx, ny, nz))
+            normal_vectors.append(normal_vector)
             normal_pixels.append(
-                tuple(round(127.5 * (component / magnitude + 1.0)) for component in (nx, ny, nz))
+                tuple(round(127.5 * (component + 1.0)) for component in normal_vector)
             )
 
     normal_path = output.with_name("lunabotics_regolith_normal.png")
     normal = Image.new("RGB", (IMAGE_SIZE, IMAGE_SIZE))
     normal.putdata(normal_pixels)
     normal.save(normal_path, optimize=True)
-    return output, diffuse_path, normal_path
+
+    # Ogre 1 has unreliable heightmap-material support on some integrated
+    # GPUs. Use a conventional mesh for rendering while retaining the native
+    # heightfield for efficient wheel collisions. Heights are shifted into
+    # Gazebo's [0, 0.55] heightfield coordinate range so both surfaces align.
+    mesh_path = output.parent.parent / "meshes" / "lunabotics_moon_terrain.obj"
+    mesh_path.parent.mkdir(parents=True, exist_ok=True)
+    selected = list(range(0, IMAGE_SIZE, MESH_STEP))
+    if selected[-1] != IMAGE_SIZE - 1:
+        selected.append(IMAGE_SIZE - 1)
+
+    lines = [
+        "# Deterministic Lunabotics BP-1 terrain generated from the collision heightmap",
+        "o lunabotics_moon_terrain",
+    ]
+    for row in selected:
+        y = ARENA_Y / 2.0 - ARENA_Y * row / (IMAGE_SIZE - 1)
+        for column in selected:
+            x = -ARENA_X / 2.0 + ARENA_X * column / (IMAGE_SIZE - 1)
+            z = elevations[row * IMAGE_SIZE + column] - MIN_HEIGHT
+            lines.append(f"v {x:.6f} {y:.6f} {z:.6f}")
+
+    for row in selected:
+        for column in selected:
+            nx, ny, nz = normal_vectors[row * IMAGE_SIZE + column]
+            lines.append(f"vn {nx:.7f} {ny:.7f} {nz:.7f}")
+
+    columns = len(selected)
+    for row in range(len(selected) - 1):
+        for column in range(columns - 1):
+            top_left = row * columns + column + 1
+            top_right = top_left + 1
+            bottom_left = top_left + columns
+            bottom_right = bottom_left + 1
+            lines.append(
+                f"f {top_left}//{top_left} {bottom_left}//{bottom_left} "
+                f"{top_right}//{top_right}"
+            )
+            lines.append(
+                f"f {top_right}//{top_right} {bottom_left}//{bottom_left} "
+                f"{bottom_right}//{bottom_right}"
+            )
+
+    mesh_path.write_text("\n".join(lines) + "\n", encoding="ascii")
+    return output, diffuse_path, normal_path, mesh_path
 
 
 if __name__ == "__main__":
