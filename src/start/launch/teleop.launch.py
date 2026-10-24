@@ -50,6 +50,7 @@ def generate_launch_description():
             '/cmd_vel/fr_wheel@std_msgs/msg/Float64]gz.msgs.Double',
             '/cmd_vel/rl_wheel@std_msgs/msg/Float64]gz.msgs.Double',
             '/cmd_vel/rr_wheel@std_msgs/msg/Float64]gz.msgs.Double',
+            '/cmd_vel/camera@std_msgs/msg/Float64]gz.msgs.Double',
             '/world/lunabotics_arena/model/melbot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model',
         ],
         remappings=[
