@@ -105,6 +105,7 @@ private:
 
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr subscriber_;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr publisher_;
+  std::unique_ptr<tf2_ros::TransformBoardcaster> tf_broadcaster_;
 
   // These state variables should remain in the world frame.
   Vec3 pos_{0.0, 0.0, 0.0};
