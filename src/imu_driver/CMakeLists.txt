@@ -13,7 +13,9 @@ find_package(nav_msgs REQUIRED)
 
 add_executable(imu_odom src/imu_odom.cpp)
 ament_target_dependencies(imu_odom rclcpp sensor_msgs nav_msgs)
-install(TARGETS imu_odom DESTINATION lib/${PROJECT_NAME})
+install(TARGETS imu_odom 
+  DESTINATION lib/${PROJECT_NAME}
+  )
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
