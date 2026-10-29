@@ -5,6 +5,8 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/imu.hpp"
+#include "tf2_ros/transform_broadcaster.h"
+#include "geometry_msgs/msg/transform_stamped.hpp"
 
 using Vec3 = std::array<double, 3>;
 
@@ -48,6 +50,7 @@ public:
     publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
 
     // TODO 4: Choose the output topic and publisher settings for the Odometry.
+    tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(this);
   }
 
 private:
@@ -73,10 +76,15 @@ private:
       msg->linear_acceleration.z};
     Vec3 accel_world = rotate(msg->orientation, accel_body);
 
+    accel_world[2] -= 9.81;
+
     for (int i = 0; i < 3; ++i) {
       vel_[i] += accel_world[i] * dt;
       pos_[i] += vel_[i] * dt;
     }
+
+    vel_[2] = 0.0;
+    pos_[2] = 0.0;
 
     Vec3 vel_body = rotate_inverse(msg->orientation, vel_);
 
@@ -100,12 +108,25 @@ private:
 
     publisher_->publish(odom);
     // TODO 10: Fill and publish an Odometry message.  Remember to fill out everything
-  
+    //
+    geometry_msgs::msg::TransformStamped t; 
+    t.header.stamp = now; 
+    t.header.frame_id = "odom";
+    t.child_frame_id = "base_link";
+    t.transform.translation.x = pos_[0];
+    t.transform.translation.y = pos_[1];
+    t.transform.translation.z = pos_[2];
+    t.transform.rotation = msg->orientation;
+
+    tf_broadcaster_->sendTransform(t);
+
+
+
   }
 
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr subscriber_;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr publisher_;
-  std::unique_ptr<tf2_ros::TransformBoardcaster> tf_broadcaster_;
+  std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
   // These state variables should remain in the world frame.
   Vec3 pos_{0.0, 0.0, 0.0};
