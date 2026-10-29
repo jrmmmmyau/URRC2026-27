@@ -162,12 +162,11 @@ void Driver::publish_commands() {
   double rl_speed = 0.0;
   double rr_speed = 0.0;
 
-  if (wheels_are_aligned()) {
     fl_speed = fl_speed_;
     fr_speed = fr_speed_;
     rl_speed = rl_speed_;
     rr_speed = rr_speed_;
-  }
+
 
   std_msgs::msg::Float64 fl_wheel;
   std_msgs::msg::Float64 fr_wheel;

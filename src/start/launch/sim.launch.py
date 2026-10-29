@@ -24,15 +24,11 @@ def generate_launch_description():
         }]
     )
     
-#    gazebo=IncludeLaunchDescription(
-#        PythonLaunchDescriptionSource([os.path.join(ros_gz_sim, 'launch','gz_sim.launch.py')]),
-#        launch_arguments={'gz_args':'empty.sdf -r'}.items()
-#    )
-   
     gazebo=IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(ros_gz_sim, 'launch','gz_sim.launch.py')]),
-        launch_arguments={'gz_args':'shapes.sdf -r'}.items()
+        launch_arguments={'gz_args':'empty.sdf -r'}.items()
     )
+   
     spawn_node=Node(
         package='ros_gz_sim',
         executable='create',
