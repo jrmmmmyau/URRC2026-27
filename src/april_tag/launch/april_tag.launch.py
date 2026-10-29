@@ -15,18 +15,18 @@ def generate_launch_description():
         get_package_share_directory("realsense2_camera"),
         "launch",
         "rs_launch.py",
-    )
+    ),
 
     april_tag_node = Node(
         package="apriltag_ros",
         executable="apriltag_node",
         name="apriltag",
-        parameters=["config/tags.yaml"],
+        parameters=[os.path.join(get_package_share_directory("april_tag"),"config","tags.yaml")],
         remappings=[
             ("image_rect", "/camera/camera/color/image_raw"),
             ("camera_info", "/camera/camera/color/camera_info"),
         ]
-    )
+    ),
 
 
-    return LaunchDescription([april_tag_node])
+    return LaunchDescription([april_tag_node, camera_launch])
