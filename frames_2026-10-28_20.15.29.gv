@@ -1,0 +1,24 @@
+digraph G {
+"chassis" -> "front_left_steering_rod_link"[label=" Broadcaster: default_authority\nAverage rate: 732.655\nBuffer length: 4.814\nMost recent transform: 289.433\nOldest transform: 284.619\n"];
+"base_link" -> "chassis"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"front_left_steering_rod_link" -> "front_left_wheel_link"[label=" Broadcaster: default_authority\nAverage rate: 732.655\nBuffer length: 4.814\nMost recent transform: 289.433\nOldest transform: 284.619\n"];
+"chassis" -> "front_right_steering_rod_link"[label=" Broadcaster: default_authority\nAverage rate: 732.655\nBuffer length: 4.814\nMost recent transform: 289.433\nOldest transform: 284.619\n"];
+"front_right_steering_rod_link" -> "front_right_wheel_link"[label=" Broadcaster: default_authority\nAverage rate: 732.655\nBuffer length: 4.814\nMost recent transform: 289.433\nOldest transform: 284.619\n"];
+"chassis" -> "rear_left_steering_rod_link"[label=" Broadcaster: default_authority\nAverage rate: 732.655\nBuffer length: 4.814\nMost recent transform: 289.433\nOldest transform: 284.619\n"];
+"rear_left_steering_rod_link" -> "rear_left_wheel_link"[label=" Broadcaster: default_authority\nAverage rate: 732.655\nBuffer length: 4.814\nMost recent transform: 289.433\nOldest transform: 284.619\n"];
+"chassis" -> "rear_right_steering_rod_link"[label=" Broadcaster: default_authority\nAverage rate: 732.655\nBuffer length: 4.814\nMost recent transform: 289.433\nOldest transform: 284.619\n"];
+"rear_right_steering_rod_link" -> "rear_right_wheel_link"[label=" Broadcaster: default_authority\nAverage rate: 732.655\nBuffer length: 4.814\nMost recent transform: 289.433\nOldest transform: 284.619\n"];
+"chassis" -> "top_camera_holder_link"[label=" Broadcaster: default_authority\nAverage rate: 732.655\nBuffer length: 4.814\nMost recent transform: 289.433\nOldest transform: 284.619\n"];
+"chassis" -> "deposition_system_link"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"chassis" -> "extraction_system_link"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"chassis" -> "front_camera_link"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"front_camera_link" -> "front_camera_optical_link"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"chassis" -> "imu_link"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"top_camera_holder_link" -> "top_camera_link"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"top_camera_link" -> "top_camera_optical_link"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+"map" -> "odom"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1793232929.1750925"[ shape=plaintext ] ;
+}->"map";
+}
