@@ -1,6 +1,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "geometry_msgs/msg/pose2_d.hpp"
+#include "visualization_msgs/msg/marker.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
 
 #include <fstream>
@@ -29,6 +30,11 @@ public:
         goal_publisher_ =
             create_publisher<geometry_msgs::msg::Pose2D>(
                 "/goal",
+                rclcpp::QoS(1).transient_local().reliable());
+
+        goal_marker_publisher_ =
+            create_publisher<visualization_msgs::msg::Marker>(
+                "/goal_marker",
                 rclcpp::QoS(1).transient_local().reliable());
 
         try
@@ -319,11 +325,30 @@ private:
             goal.y = goal_y;
             goal.theta = 0.0;
 
+            visualization_msgs::msg::Marker goal_marker;
+            goal_marker.header = map.header;
+            goal_marker.ns = "navigation_goal";
+            goal_marker.id = 0;
+            goal_marker.type = visualization_msgs::msg::Marker::SPHERE;
+            goal_marker.action = visualization_msgs::msg::Marker::ADD;
+            goal_marker.pose.position.x = goal_x;
+            goal_marker.pose.position.y = goal_y;
+            goal_marker.pose.position.z = 0.5;
+            goal_marker.pose.orientation.w = 1.0;
+            goal_marker.scale.x = 3.0;
+            goal_marker.scale.y = 3.0;
+            goal_marker.scale.z = 1.0;
+            goal_marker.color.r = 1.0;
+            goal_marker.color.g = 0.2;
+            goal_marker.color.b = 0.1;
+            goal_marker.color.a = 1.0;
+
             map_publisher_->publish(map);
 
             rclcpp::sleep_for(std::chrono::milliseconds(100));
 
             goal_publisher_->publish(goal);
+            goal_marker_publisher_->publish(goal_marker);
 
             RCLCPP_INFO(
                 get_logger(),
@@ -413,6 +438,9 @@ private:
 
     rclcpp::Publisher<geometry_msgs::msg::Pose2D>::SharedPtr
         goal_publisher_;
+
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr
+        goal_marker_publisher_;
 
     std::string package_share_directory_;
     std::thread input_thread_;

@@ -7,12 +7,11 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(tf2 REQUIRED)
@@ -57,7 +56,7 @@ ament_target_dependencies(plan_client rclcpp geometry_msgs nav_msgs)
 target_link_libraries(plan_client "${cpp_typesupport_target}")
 
 add_executable(test_map_publisher src/test_map_publisher.cpp)
-ament_target_dependencies(test_map_publisher rclcpp nav_msgs geometry_msgs ament_index_cpp)
+ament_target_dependencies(test_map_publisher rclcpp nav_msgs geometry_msgs visualization_msgs ament_index_cpp)
 
 add_executable(map_verifier_server src/map_verifier_server.cpp)
 target_include_directories(map_verifier_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
