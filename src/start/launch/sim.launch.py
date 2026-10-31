@@ -1,3 +1,5 @@
+#launch teleop in another terminal if neccsary
+
 import os
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
