@@ -50,6 +50,7 @@ def generate_launch_description():
             '/cmd_vel/rr_wheel@std_msgs/msg/Float64]gz.msgs.Double',
             '/world/empty/model/melbot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model',
             '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/cmd_vel/camera@std_msgs/msg/Float64]gz.msgs.Double',
         ],
         remappings=[
@@ -70,7 +71,8 @@ def generate_launch_description():
     imu_driver = Node(
         package='imu_driver',
         executable='imu_odom',
-        output='screen'
+        output='screen',
+        parameters=[{'use_sim_time': True}]
     )
 
     return LaunchDescription([rsp_node, gazebo, spawn_node, bridge_node, driver_node, imu_driver])
