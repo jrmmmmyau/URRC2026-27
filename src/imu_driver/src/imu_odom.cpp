@@ -56,18 +56,17 @@ public:
 private:
   void on_imu(const sensor_msgs::msg::Imu::SharedPtr msg)
   {
-    
-
-    const rclcpp::Time now = this->now();
+    // 1. MUST use Gazebo's physics timestamp, NOT this->now()
+    const rclcpp::Time current_time = msg->header.stamp;
     if (!has_last_time_) {
-      last_time_ = now;
+      last_time_ = current_time;
       has_last_time_ = true;
       return;  // need two readings before we can measure a time gap
     }
-    const double dt = (now - last_time_).seconds();
-    last_time_ = now;
+    const double dt = (current_time - last_time_).seconds();
+    last_time_ = current_time;
     if (dt <= 0.0 || dt > 0.5) {
-      return;  // skip nonsense or huge gaps (would cause big jumps)
+      return;  // skip nonsense or huge gaps
     }
 
     const Vec3 accel_body = {
@@ -76,11 +75,17 @@ private:
       msg->linear_acceleration.z};
     Vec3 accel_world = rotate(msg->orientation, accel_body);
 
-    accel_world[2] -= 9.81;
+    // 2. Integrate X and Y using Trapezoidal rule (no velocity damping!)
+    for (int i = 0; i < 2; ++i) {
+      // Only filter microscopic floating-point solver noise when nearly idle
+      if (std::abs(accel_world[i]) < 1e-4) {
+        accel_world[i] = 0.0;
+      }
 
-    for (int i = 0; i < 3; ++i) {
-      vel_[i] += accel_world[i] * dt;
-      pos_[i] += vel_[i] * dt;
+      const double next_vel = vel_[i] + 0.5 * (last_accel_[i] + accel_world[i]) * dt;
+      pos_[i] += 0.5 * (vel_[i] + next_vel) * dt;
+      vel_[i] = next_vel;
+      last_accel_[i] = accel_world[i];
     }
 
     vel_[2] = 0.0;
@@ -88,31 +93,25 @@ private:
 
     Vec3 vel_body = rotate_inverse(msg->orientation, vel_);
 
-     nav_msgs::msg::Odometry odom;
-     odom.header.stamp = now;
-     odom.header.frame_id = "odom";
-     odom.child_frame_id = "base_link";
+    nav_msgs::msg::Odometry odom;
+    odom.header.stamp = current_time;
+    odom.header.frame_id = "odom";
+    odom.child_frame_id = "base_link";
 
-     odom.pose.pose.position.x = pos_[0];
-     odom.pose.pose.position.y = pos_[1];
-     odom.pose.pose.position.z = pos_[2];
-     odom.pose.pose.orientation = msg->orientation; //get orientation directly from IMU
+    odom.pose.pose.position.x = pos_[0];
+    odom.pose.pose.position.y = pos_[1];
+    odom.pose.pose.position.z = pos_[2];
+    odom.pose.pose.orientation = msg->orientation;
 
-
-    // float ori= 2 * atan2(odom.pose.pose.orientation.z, odom.pose.pose.orientation.w);
-    // RCLCPP_INFO(this->get_logger(), "Orientation: %.3f",ori);
-
-     odom.twist.twist.linear.x = vel_body[0];
-     odom.twist.twist.linear.y = vel_body[1];
-     odom.twist.twist.linear.z = vel_body[2];
-     odom.twist.twist.angular = msg->angular_velocity;
-
-
+    odom.twist.twist.linear.x = vel_body[0];
+    odom.twist.twist.linear.y = vel_body[1];
+    odom.twist.twist.linear.z = vel_body[2];
+    odom.twist.twist.angular = msg->angular_velocity;
 
     publisher_->publish(odom);
- 
-    geometry_msgs::msg::TransformStamped t; 
-    t.header.stamp = now; 
+
+    geometry_msgs::msg::TransformStamped t;
+    t.header.stamp = current_time;
     t.header.frame_id = "odom";
     t.child_frame_id = "base_link";
     t.transform.translation.x = pos_[0];
@@ -121,9 +120,6 @@ private:
     t.transform.rotation = msg->orientation;
 
     tf_broadcaster_->sendTransform(t);
-
-
-
   }
 
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr subscriber_;
@@ -133,6 +129,7 @@ private:
   // These state variables should remain in the world frame.
   Vec3 pos_{0.0, 0.0, 0.0};
   Vec3 vel_{0.0, 0.0, 0.0};
+  Vec3 last_accel_{0.0, 0.0, 0.0};
   rclcpp::Time last_time_;
   bool has_last_time_ = false;
 };
@@ -142,7 +139,6 @@ int main(int argc, char ** argv)
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<ImuOdom>());
   rclcpp::shutdown();
-
 
   return 0;
 }
