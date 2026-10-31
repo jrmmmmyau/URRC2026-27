@@ -118,7 +118,7 @@ public:
     if (xs.size() != n || ys.size() != n || zs.size() != n ||
       rolls.size() != n || pitches.size() != n || yaws.size() != n)
     {
-      RCLCPP_FATAL(get_logger(), "All tag_* lists in the YAML must have the same length.");
+      RCLCPP_WARN(get_logger(), "All tag_* lists in the YAML must have the same length.");
       throw std::runtime_error("bad tag map");  // stops the node
     }
 
