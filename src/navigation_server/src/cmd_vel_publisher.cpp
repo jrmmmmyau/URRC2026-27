@@ -160,7 +160,7 @@ private:
         }
 
         int lookahead_index = closest_index + LOOKAHEAD_POINTS;
-        if (lookahead_index >= current_path_.poses.size()) {
+        if (lookahead_index >= static_cast<int>(current_path_.poses.size())) {
             lookahead_index = current_path_.poses.size() - 1;
         }
 
@@ -446,7 +446,7 @@ private:
         previous_closest_index_ = closest_index;
 
         int lookahead_index = closest_index + LOOKAHEAD_POINTS;
-        if (lookahead_index >= current_path_.poses.size()) {
+        if (lookahead_index >= static_cast<int>(current_path_.poses.size())) {
             lookahead_index = current_path_.poses.size() - 1;
         }
 
