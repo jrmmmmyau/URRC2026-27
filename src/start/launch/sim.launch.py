@@ -73,7 +73,8 @@ def generate_launch_description():
     imu_driver = Node(
         package='imu_driver',
         executable='imu_odom',
-        output='screen'
+        output='screen',
+        parameters=[{'use_sim_time': True}]
     )
 
     return LaunchDescription([rsp_node, gazebo, spawn_node, bridge_node, driver_node, imu_driver])

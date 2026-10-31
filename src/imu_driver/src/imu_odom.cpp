@@ -58,14 +58,19 @@ private:
   {
     
 
-    const rclcpp::Time now = this->now();
+    rclcpp::Time sample_time(
+      msg->header.stamp,
+      this->get_clock()->get_clock_type());
+    if (sample_time.nanoseconds() == 0) {
+      sample_time = this->now();
+    }
     if (!has_last_time_) {
-      last_time_ = now;
+      last_time_ = sample_time;
       has_last_time_ = true;
       return;  // need two readings before we can measure a time gap
     }
-    const double dt = (now - last_time_).seconds();
-    last_time_ = now;
+    const double dt = (sample_time - last_time_).seconds();
+    last_time_ = sample_time;
     if (dt <= 0.0 || dt > 0.5) {
       return;  // skip nonsense or huge gaps (would cause big jumps)
     }
@@ -89,7 +94,7 @@ private:
     Vec3 vel_body = rotate_inverse(msg->orientation, vel_);
 
      nav_msgs::msg::Odometry odom;
-     odom.header.stamp = now;
+     odom.header.stamp = sample_time;
      odom.header.frame_id = "odom";
      odom.child_frame_id = "base_link";
 
@@ -112,7 +117,7 @@ private:
     publisher_->publish(odom);
  
     geometry_msgs::msg::TransformStamped t; 
-    t.header.stamp = now; 
+    t.header.stamp = sample_time;
     t.header.frame_id = "odom";
     t.child_frame_id = "base_link";
     t.transform.translation.x = pos_[0];
