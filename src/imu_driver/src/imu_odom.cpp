@@ -10,7 +10,7 @@
 
 using Vec3 = std::array<double, 3>;
 
-// TODO 1: Decide how you want to transform a vector between the IMU/body
+//  Decide how you want to transform a vector between the IMU/body
 // frame and the world frame.
 static Vec3 rotate(const geometry_msgs::msg::Quaternion & q, const Vec3 & v)
 {
@@ -24,13 +24,13 @@ static Vec3 rotate(const geometry_msgs::msg::Quaternion & q, const Vec3 & v)
     v[2] + q.w * tz + (q.x * ty - q.y * tx)};
 }
 
-// TODO 2: Provide the reverse transformation.  From world to robot
+// Provide the reverse transformation.  From world to robot
 static Vec3 rotate_inverse(geometry_msgs::msg::Quaternion q, const Vec3 & v)
 {
   q.x = -q.x;
   q.y = -q.y;
   q.z = -q.z;
-  // TODO: return the inverse-transformed vector.
+  //return the inverse-transformed vector.
   return rotate(q,v);
 }
 
@@ -44,12 +44,12 @@ public:
       rclcpp::SensorDataQoS(),
       [this](const sensor_msgs::msg::Imu::SharedPtr msg){on_imu(msg);}
     );
-    // TODO 3: Choose the input topic and subscription settings for the IMU.
+
     // Connect incoming messages to on_imu().
 
     publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
 
-    // TODO 4: Choose the output topic and publisher settings for the Odometry.
+    //broadcast tf
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(this);
   }
 
@@ -96,19 +96,21 @@ private:
      odom.pose.pose.position.x = pos_[0];
      odom.pose.pose.position.y = pos_[1];
      odom.pose.pose.position.z = pos_[2];
-     odom.pose.pose.orientation = msg->orientation;
+     odom.pose.pose.orientation = msg->orientation; //get orientation directly from IMU
+
+
+    // float ori= 2 * atan2(odom.pose.pose.orientation.z, odom.pose.pose.orientation.w);
+    // RCLCPP_INFO(this->get_logger(), "Orientation: %.3f",ori);
 
      odom.twist.twist.linear.x = vel_body[0];
      odom.twist.twist.linear.y = vel_body[1];
      odom.twist.twist.linear.z = vel_body[2];
      odom.twist.twist.angular = msg->angular_velocity;
 
-    // TODO 9: Choose an integration method and maintain whatever state it
-    // needs.  Consider numerical error, uncertainty propagation, drifting
+
 
     publisher_->publish(odom);
-    // TODO 10: Fill and publish an Odometry message.  Remember to fill out everything
-    //
+ 
     geometry_msgs::msg::TransformStamped t; 
     t.header.stamp = now; 
     t.header.frame_id = "odom";
@@ -140,7 +142,7 @@ int main(int argc, char ** argv)
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<ImuOdom>());
   rclcpp::shutdown();
-  // TODO 11: Complete the ROS 2 program lifecycle.
+
 
   return 0;
 }
