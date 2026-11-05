@@ -24,7 +24,7 @@ const float WAYPOINT_DISTANCE_THRESHOLD = 1; // meters
 const float GOAL_SLOWDOWN_DISTANCE = 10.0; // meters
 const float GOAL_DISTANCE_THRESHOLD = 0.1; // meters
 
-const bool PURE_PURSUIT = true; 
+const bool PURE_PURSUIT = false; 
 
 class CmdVelPublisher : public rclcpp::Node
 {

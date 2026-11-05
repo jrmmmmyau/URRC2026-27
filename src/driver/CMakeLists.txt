@@ -16,6 +16,7 @@ add_executable(driver_node
   src/driver/driver.cpp
 )
 
+
 target_include_directories(driver_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
@@ -28,8 +29,26 @@ ament_target_dependencies(driver_node
   sensor_msgs
 )
 
+
+add_executable(teleop_driver_node
+  src/teleop_driver_node.cpp
+  src/driver/teleop_driver.cpp
+)
+
+target_include_directories(teleop_driver_node PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+ament_target_dependencies(teleop_driver_node
+  rclcpp
+  geometry_msgs
+  std_msgs
+  sensor_msgs
+)
+
 install(
-  TARGETS driver_node
+  TARGETS driver_node teleop_driver_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

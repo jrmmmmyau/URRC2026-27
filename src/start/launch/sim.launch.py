@@ -65,7 +65,7 @@ def generate_launch_description():
     # run driver code
     driver_node = Node(
         package='driver',
-        executable='driver_node',
+        executable='teleop_driver_node',
         output='screen'
     )
 
