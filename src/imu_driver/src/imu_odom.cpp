@@ -136,7 +136,7 @@ private:
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
   // These state variables should remain in the world frame.
-  Vec3 pos_{0.0, 0.0, 0.0};
+  Vec3 pos_{10.0, 10.0, 0.0};
   Vec3 vel_{0.0, 0.0, 0.0};
   rclcpp::Time last_time_;
   bool has_last_time_ = false;

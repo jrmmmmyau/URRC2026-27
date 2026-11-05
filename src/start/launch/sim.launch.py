@@ -34,7 +34,7 @@ def generate_launch_description():
     spawn_node=Node(
         package='ros_gz_sim',
         executable='create',
-        arguments=['-topic','robot_description','-name','melbot','-z','0.01'],
+        arguments=['-topic','robot_description','-name','melbot','-x','10','-y','10','-z','0.01'],
         output='screen'
     )
     # convert to gz format
