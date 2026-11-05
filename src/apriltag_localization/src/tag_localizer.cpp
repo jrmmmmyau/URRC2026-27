@@ -54,7 +54,7 @@ public:
             "detections", 10,
             [this](const apriltag_msgs::msg::AprilTagDetectionArray::SharedPtr msg) {on_detections(msg);
             });
-        pub_ = create_publisher<geometry_msgs::msgs::PoseWithCovarianceStamped> ("tag_pose",10);
+        pub_ = create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped> ("tag_pose",10);
     }
 private:
     void on_detections(const apriltag_msgs::msg::AprilTagDetectionArray::SharedPtr msg){

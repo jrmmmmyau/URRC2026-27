@@ -30,13 +30,12 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-add_executable(tag_localizer.cpp)
-ament_target_dependencies(tag_localizer rclcpp apriltag_msgs tf2 tf2_geometry_msgs tf2_ros)
-
+add_executable(tag_localizer src/tag_localizer.cpp)
+ament_target_dependencies(tag_localizer
+  rclcpp apriltag_msgs geometry_msgs tf2 tf2_ros tf2_geometry_msgs)
+install(TARGETS tag_localizer
+  DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY config launch
     DESTINATION share/${PROJECT_NAME})
-
-install(TARGETs tag_localizer
-  DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
