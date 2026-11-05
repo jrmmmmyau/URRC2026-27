@@ -29,7 +29,7 @@ private:
     void depth_callback(
         const sensor_msgs::msg::Image::SharedPtr msg);
     
-    void update_grid(const std::vector<int8_t>& evidence);
+    void update_grid(const std::vector<std::pair<double, double>>& measurements);
 
     void publish_grid();
 
