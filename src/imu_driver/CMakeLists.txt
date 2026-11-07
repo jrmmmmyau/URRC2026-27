@@ -11,9 +11,10 @@ find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 add_executable(imu_odom src/imu_odom.cpp)
-ament_target_dependencies(imu_odom rclcpp sensor_msgs nav_msgs tf2_ros)
+ament_target_dependencies(imu_odom rclcpp sensor_msgs nav_msgs tf2_ros geometry_msgs)
 install(TARGETS imu_odom DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
