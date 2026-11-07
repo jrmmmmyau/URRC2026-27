@@ -111,15 +111,18 @@ void Teleop_driver::cmd_vel_callback(
     rr_speed_cmd_ = wheel_speed;
   }
 
-  // Spin in place. The steering angles are the same ones used by ng/teleop_driver.
+  // Spin in place with each wheel tangent to its circle around the chassis center.
   else if (std::abs(angular_z) > steering_tolerance) {
     const double wheel_speed =
         std::abs(angular_z) * std::hypot(wheel_x, wheel_y) / wheel_radius;
 
-    fl_target_ = -std::atan2(wheel_y, wheel_x);
-    fr_target_ = std::atan2(wheel_y, wheel_x);
-    rl_target_ = std::atan2(wheel_y, wheel_x);
-    rr_target_ = -std::atan2(wheel_y, wheel_x);
+    // A wheel at (x, y) needs velocity (-angular_z*y, angular_z*x).
+    // Left wheels roll backward, so their steering angle is negative.
+    const double spin_angle = std::atan2(wheel_x, wheel_y);
+    fl_target_ = -spin_angle;
+    fr_target_ = spin_angle;
+    rl_target_ = spin_angle;
+    rr_target_ = -spin_angle;
     // RCLCPP_INFO(this->get_logger(), "FL: %.3f | FR: %.3f | RL: %.3f | RR: %.3f",fl_target_, fr_target_, rl_target_, rr_target_);
 
     if (angular_z > 0.0) {
