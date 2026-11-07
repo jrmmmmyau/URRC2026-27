@@ -13,18 +13,18 @@
 const int CONTROL_FREQUENCY = 10;  // Hz
 const int DISTANCE_INCREASE_LIMIT = 10;
 const int LOOKAHEAD_POINTS = 20;
-const float TURN_THRESHOLD = 0.2;  // radians
+const float TURN_THRESHOLD = 0.05;  // radians
 const float TURN_SPEED = 0.5;  // rad/s
 const float DRIVE_SPEED = 5; // m/s
 const float MAX_SPEED = 5; // m/s
-const float MAX_ACCELERATION = 1.0; // m/s^2
-const float MAX_DECELERATION = 1.5; // m/s^2
-const float MIN_START_SPEED = 0.5; // m/s
+const float MAX_ACCELERATION = 2.5; // m/s^2
+const float MAX_DECELERATION = 2.0; // m/s^2
+const float MIN_START_SPEED = 0.1; // m/s
 const float WAYPOINT_DISTANCE_THRESHOLD = 1; // meters
 const float GOAL_SLOWDOWN_DISTANCE = 10.0; // meters
 const float GOAL_DISTANCE_THRESHOLD = 0.1; // meters
 
-const bool PURE_PURSUIT = false; 
+
 
 class CmdVelPublisher : public rclcpp::Node
 {
@@ -36,8 +36,11 @@ enum class ControllerState
     GOAL_REACHED
 };
 public:
+    
     CmdVelPublisher() : Node("cmd_vel_publisher")
     {
+        declare_parameter("pure_pursuit", true);
+        PURE_PURSUIT = this->get_parameter("pure_pursuit").as_bool();
         odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>("/odom", 10, std::bind(&CmdVelPublisher::odom_callback, this, std::placeholders::_1));
         path_subscriber_ = this->create_subscription<nav_msgs::msg::Path>("/plan", 10, std::bind(&CmdVelPublisher::path_callback, this, std::placeholders::_1));
         waypoint_subscriber_ = this->create_subscription<nav_msgs::msg::Path>("/waypoints", 10, std::bind(&CmdVelPublisher::waypoint_callback, this, std::placeholders::_1));
@@ -47,6 +50,7 @@ public:
     }
 
 private:
+    bool PURE_PURSUIT; 
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscriber_;
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_subscriber_;
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr waypoint_subscriber_;

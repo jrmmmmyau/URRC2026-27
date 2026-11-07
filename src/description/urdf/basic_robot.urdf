@@ -379,7 +379,7 @@
       <visualize>true</visualize>
       <topic>imu</topic>
       <gz_frame_id>imu_link</gz_frame_id>
-      <imu>
+      <!-- <imu>
         <angular_velocity>
           <x><noise type="gaussian"><mean>0</mean><stddev>2e-4</stddev></noise></x>
           <y><noise type="gaussian"><mean>0</mean><stddev>2e-4</stddev></noise></y>
@@ -389,6 +389,18 @@
           <x><noise type="gaussian"><mean>0</mean><stddev>1.7e-2</stddev></noise></x>
           <y><noise type="gaussian"><mean>0</mean><stddev>1.7e-2</stddev></noise></y>
           <z><noise type="gaussian"><mean>0</mean><stddev>1.7e-2</stddev></noise></z>
+        </linear_acceleration>
+      </imu> -->
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0</stddev></noise></z>
         </linear_acceleration>
       </imu>
     </sensor>

@@ -1,18 +1,19 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+from launch_ros.parameter_descriptions import ParameterValue
 from ament_index_python.packages import get_package_share_directory
 import os
 
 
 def generate_launch_description():
     package_share = get_package_share_directory('navigation_server')
-    rviz_config = os.path.join(
-        package_share,
-        'config',
-        'navigation_test.rviz'
-    )
+    rviz_config = os.path.expanduser('~/URRC2026-27/rviz/nav_odom.rviz')
+    pure_pursuit_arg = DeclareLaunchArgument('pure_pursuit', default_value='true')
 
     return LaunchDescription([
+        pure_pursuit_arg,
         # A* navigation server
         Node(
             package='navigation_server',
@@ -35,6 +36,10 @@ def generate_launch_description():
             executable='cmd_vel_publisher',
             name='cmd_vel_publisher',
             output='screen',
+            parameters=[
+                {'pure_pursuit': ParameterValue(LaunchConfiguration('pure_pursuit'), value_type=bool)}
+                
+            ],
         ),
 
         # Connects map to odom for RViz visualization
