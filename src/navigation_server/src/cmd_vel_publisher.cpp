@@ -13,7 +13,7 @@
 const int CONTROL_FREQUENCY = 10;  // Hz
 const int DISTANCE_INCREASE_LIMIT = 10;
 const int LOOKAHEAD_POINTS = 20;
-const float TURN_THRESHOLD = 0.05;  // radians
+const float TURN_THRESHOLD = 0.1;  // radians
 const float TURN_SPEED = 0.5;  // rad/s
 const float DRIVE_SPEED = 5; // m/s
 const float MAX_SPEED = 5; // m/s
