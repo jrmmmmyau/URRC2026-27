@@ -11,6 +11,8 @@ double wheel_radius = 0.09;
 double wheel_x = 0.32;
 double wheel_y = 0.24;
 double steering_tolerance = 0.075;
+constexpr double stopped_speed_tolerance = 0.1;  // wheel rad/s
+constexpr auto feedback_timeout = std::chrono::milliseconds(500);
 }
 
 Teleop_driver::Teleop_driver() : Node("teleop_driver") {
@@ -53,18 +55,41 @@ Teleop_driver::Teleop_driver() : Node("teleop_driver") {
 
 void Teleop_driver::joint_state_callback(
     const sensor_msgs::msg::JointState::SharedPtr msg) {
-  for (size_t i = 0; i < msg->name.size() && i < msg->position.size(); ++i) {
-    if (msg->name[i] == "front_left_steering_joint") {
-      fl_angle_ = msg->position[i];
-    } else if (msg->name[i] == "front_right_steering_joint") {
-      fr_angle_ = msg->position[i];
-    } else if (msg->name[i] == "rear_left_steering_joint") {
-      rl_angle_ = msg->position[i];
-    } else if (msg->name[i] == "rear_right_steering_joint") {
-      rr_angle_ = msg->position[i];
+  // Require all eight values in this sample; missing/invalid feedback must
+  // never be mistaken for a stopped wheel or aligned steering joint.
+  bool steering_seen[4] = {};
+  bool wheel_seen[4] = {};
+  const char *steering_names[] = {
+      "front_left_steering_joint", "front_right_steering_joint",
+      "rear_left_steering_joint", "rear_right_steering_joint"};
+  const char *wheel_names[] = {
+      "front_left_wheel_spin_joint", "front_right_wheel_spin_joint",
+      "rear_left_wheel_spin_joint", "rear_right_wheel_spin_joint"};
+  double *angles[] = {&fl_angle_, &fr_angle_, &rl_angle_, &rr_angle_};
+  double *speeds[] = {&fl_speed_actual_, &fr_speed_actual_,
+                      &rl_speed_actual_, &rr_speed_actual_};
+  for (size_t i = 0; i < msg->name.size(); ++i) {
+    for (size_t wheel = 0; wheel < 4; ++wheel) {
+      if (msg->name[i] == steering_names[wheel] &&
+          i < msg->position.size() && std::isfinite(msg->position[i])) {
+        *angles[wheel] = msg->position[i];
+        steering_seen[wheel] = true;
+      }
+      if (msg->name[i] == wheel_names[wheel] &&
+          i < msg->velocity.size() && std::isfinite(msg->velocity[i])) {
+        *speeds[wheel] = msg->velocity[i];
+        wheel_seen[wheel] = true;
+      }
     }
   }
   received_joint_state_ = true;
+  for (size_t wheel = 0; wheel < 4; ++wheel) {
+    received_joint_state_ = received_joint_state_ &&
+                            steering_seen[wheel] && wheel_seen[wheel];
+  }
+  if (received_joint_state_) {
+    last_joint_state_ = std::chrono::steady_clock::now();
+  }
 }
 
 void Teleop_driver::cmd_vel_callback(
@@ -80,10 +105,10 @@ void Teleop_driver::cmd_vel_callback(
     rr_target_ = 0.0;
 
     const double wheel_speed = vx / wheel_radius;
-    fl_speed_ = wheel_speed;
-    fr_speed_ = wheel_speed;
-    rl_speed_ = wheel_speed;
-    rr_speed_ = wheel_speed;
+    fl_speed_cmd_ = wheel_speed;
+    fr_speed_cmd_ = wheel_speed;
+    rl_speed_cmd_ = wheel_speed;
+    rr_speed_cmd_ = wheel_speed;
   }
 
   // Spin in place. The steering angles are the same ones used by ng/teleop_driver.
@@ -98,24 +123,24 @@ void Teleop_driver::cmd_vel_callback(
     // RCLCPP_INFO(this->get_logger(), "FL: %.3f | FR: %.3f | RL: %.3f | RR: %.3f",fl_target_, fr_target_, rl_target_, rr_target_);
 
     if (angular_z > 0.0) {
-      fl_speed_ = -wheel_speed;
-      fr_speed_ = wheel_speed;
-      rl_speed_ = -wheel_speed;
-      rr_speed_ = wheel_speed;
+      fl_speed_cmd_ = -wheel_speed;
+      fr_speed_cmd_ = wheel_speed;
+      rl_speed_cmd_ = -wheel_speed;
+      rr_speed_cmd_ = wheel_speed;
     } else {
-      fl_speed_ = wheel_speed;
-      fr_speed_ = -wheel_speed;
-      rl_speed_ = wheel_speed;
-      rr_speed_ = -wheel_speed;
+      fl_speed_cmd_ = wheel_speed;
+      fr_speed_cmd_ = -wheel_speed;
+      rl_speed_cmd_ = wheel_speed;
+      rr_speed_cmd_ = -wheel_speed;
     }
   }
 
-  // Stop the wheels and return the steering to straight ahead.
+  // Stop the wheels while retaining the requested steering position.
   else {
-    fl_speed_ = 0.0;
-    fr_speed_ = 0.0;
-    rl_speed_ = 0.0;
-    rr_speed_ = 0.0;
+    fl_speed_cmd_ = 0.0;
+    fr_speed_cmd_ = 0.0;
+    rl_speed_cmd_ = 0.0;
+    rr_speed_cmd_ = 0.0;
   }
 }
 
@@ -128,29 +153,54 @@ bool Teleop_driver::wheels_are_aligned() const {
     return false;
   }
 
-//  RCLCPP_INFO(this->get_logger(),
- //   "Errors: FL=%.3f | FR=%.3f | RL=%.3f | RR=%.3f",
- //   angle_error(fl_target_, fl_angle_),
-//    angle_error(fr_target_, fr_angle_),
-//    angle_error(rl_target_, rl_angle_),
-//    angle_error(rr_target_, rr_angle_));
-
   return std::abs(angle_error(fl_target_ , fl_angle_)) < steering_tolerance &&
          std::abs(angle_error(fr_target_ , fr_angle_)) < steering_tolerance &&
          std::abs(angle_error(rl_target_ , rl_angle_)) < steering_tolerance &&
          std::abs(angle_error(rr_target_ , rr_angle_)) < steering_tolerance;
 }
 
+bool Teleop_driver::wheels_are_stopped() const {
+  return received_joint_state_ &&
+         std::abs(fl_speed_actual_) < stopped_speed_tolerance &&
+         std::abs(fr_speed_actual_) < stopped_speed_tolerance &&
+         std::abs(rl_speed_actual_) < stopped_speed_tolerance &&
+         std::abs(rr_speed_actual_) < stopped_speed_tolerance;
+}
+
 void Teleop_driver::publish_commands() {
+  const bool feedback_valid = received_joint_state_ &&
+      std::chrono::steady_clock::now() - last_joint_state_ < feedback_timeout;
+  const bool target_changed =
+      fl_target_ != fl_applied_target_ || fr_target_ != fr_applied_target_ ||
+      rl_target_ != rl_applied_target_ || rr_target_ != rr_applied_target_;
+
+  if (!feedback_valid || target_changed) {
+    transition_ = Transition::BRAKING;
+  }
+  if (feedback_valid) {
+    if (transition_ == Transition::BRAKING && wheels_are_stopped()) {
+      fl_applied_target_ = fl_target_;
+      fr_applied_target_ = fr_target_;
+      rl_applied_target_ = rl_target_;
+      rr_applied_target_ = rr_target_;
+      transition_ = Transition::STEERING;
+    }
+    if (transition_ == Transition::STEERING && wheels_are_aligned()) {
+      transition_ = Transition::DRIVING;
+    } else if (transition_ == Transition::DRIVING && !wheels_are_aligned()) {
+      transition_ = Transition::BRAKING;
+    }
+  }
+
   std_msgs::msg::Float64 fl_steering;
   std_msgs::msg::Float64 fr_steering;
   std_msgs::msg::Float64 rl_steering;
   std_msgs::msg::Float64 rr_steering;
 
-  fl_steering.data = fl_target_;
-  fr_steering.data = fr_target_;
-  rl_steering.data = rl_target_;
-  rr_steering.data = rr_target_;
+  fl_steering.data = fl_applied_target_;
+  fr_steering.data = fr_applied_target_;
+  rl_steering.data = rl_applied_target_;
+  rr_steering.data = rr_applied_target_;
 
   fl_steering_pub_->publish(fl_steering);
   fr_steering_pub_->publish(fr_steering);
@@ -162,10 +212,12 @@ void Teleop_driver::publish_commands() {
   double rl_speed = 0.0;
   double rr_speed = 0.0;
 
-    fl_speed = fl_speed_;
-    fr_speed = fr_speed_;
-    rl_speed = rl_speed_;
-    rr_speed = rr_speed_;
+  if (feedback_valid && transition_ == Transition::DRIVING) {
+    fl_speed = fl_speed_cmd_;
+    fr_speed = fr_speed_cmd_;
+    rl_speed = rl_speed_cmd_;
+    rr_speed = rr_speed_cmd_;
+  }
 
 
   std_msgs::msg::Float64 fl_wheel;
