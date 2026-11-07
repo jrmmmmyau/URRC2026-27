@@ -55,8 +55,7 @@ Teleop_driver::Teleop_driver() : Node("teleop_driver") {
 
 void Teleop_driver::joint_state_callback(
     const sensor_msgs::msg::JointState::SharedPtr msg) {
-  // Require all eight values in this sample; missing/invalid feedback must
-  // never be mistaken for a stopped wheel or aligned steering joint.
+  // Require all eight values in this sample
   bool steering_seen[4] = {};
   bool wheel_seen[4] = {};
   const char *steering_names[] = {
