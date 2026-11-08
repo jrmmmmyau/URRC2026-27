@@ -1,6 +1,5 @@
 #include "driver/teleop_driver.hpp"
 
-#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <functional>
@@ -122,7 +121,6 @@ void Teleop_driver::cmd_vel_callback(
     fr_target_ = spin_angle;
     rl_target_ = spin_angle;
     rr_target_ = -spin_angle;
-    // RCLCPP_INFO(this->get_logger(), "FL: %.3f | FR: %.3f | RL: %.3f | RR: %.3f",fl_target_, fr_target_, rl_target_, rr_target_);
 
     if (angular_z > 0.0) {
       fl_speed_cmd_ = -wheel_speed;
@@ -166,6 +164,13 @@ bool Teleop_driver::wheels_are_aligned(double tolerance) const {
     return false;
   }
 
+  // RCLCPP_INFO(this->get_logger(),
+  //     "Errors: FL=%.3f | FR=%.3f | RL=%.3f | RR=%.3f",
+  //     angle_error(fl_target_, fl_angle_),
+  //     angle_error(fr_target_, fr_angle_),
+  //     angle_error(rl_target_, rl_angle_),
+  //     angle_error(rr_target_, rr_angle_));
+
   return std::abs(angle_error(fl_target_ , fl_angle_)) < tolerance &&
          std::abs(angle_error(fr_target_ , fr_angle_)) < tolerance &&
          std::abs(angle_error(rl_target_ , rl_angle_)) < tolerance &&
@@ -197,45 +202,12 @@ void Teleop_driver::publish_commands() {
       rr_applied_target_ = rr_target_;
       transition_ = Transition::STEERING;
     }
-    if (transition_ == Transition::STEERING && wheels_are_aligned()) {
+    if (transition_ == Transition::STEERING &&
+        wheels_are_aligned(steering_tolerance)) {
       transition_ = Transition::DRIVING;
     } else if (transition_ == Transition::DRIVING &&
                !wheels_are_aligned(steering_release_tolerance)) {
       transition_ = Transition::BRAKING;
-    }
-  }
-
-  // Report the reason for a blocked command, at most once every two seconds.
-  const auto now = std::chrono::steady_clock::now();
-  const bool motion_requested = fl_speed_cmd_ != 0.0 || fr_speed_cmd_ != 0.0 ||
-                                rl_speed_cmd_ != 0.0 || rr_speed_cmd_ != 0.0;
-  if (motion_requested && transition_ != Transition::DRIVING &&
-      now - last_wait_log_ >= std::chrono::seconds(2)) {
-    last_wait_log_ = now;
-    if (!feedback_valid) {
-      const char *fields[] = {"FL steering position", "FR steering position",
-          "RL steering position", "RR steering position", "FL wheel velocity",
-          "FR wheel velocity", "RL wheel velocity", "RR wheel velocity"};
-      for (size_t i = 0; i < feedback_times_.size(); ++i) {
-        if (feedback_times_[i] == std::chrono::steady_clock::time_point{} ||
-            now - feedback_times_[i] >= feedback_timeout) {
-          RCLCPP_WARN(get_logger(), "Motion blocked: missing/stale %s in /joint_states",
-                      fields[i]);
-        }
-      }
-    } else if (transition_ == Transition::BRAKING) {
-      const double max_speed = std::max({std::abs(fl_speed_actual_),
-          std::abs(fr_speed_actual_), std::abs(rl_speed_actual_),
-          std::abs(rr_speed_actual_)});
-      RCLCPP_WARN(get_logger(),
-          "Braking: max wheel speed %.3f rad/s; waiting for < %.3f",
-          max_speed, stopped_speed_tolerance);
-    } else {
-      RCLCPP_WARN(get_logger(),
-          "Aligning steering: errors FL=%.3f FR=%.3f RL=%.3f RR=%.3f rad; waiting for < %.3f",
-          angle_error(fl_target_, fl_angle_), angle_error(fr_target_, fr_angle_),
-          angle_error(rl_target_, rl_angle_), angle_error(rr_target_, rr_angle_),
-          steering_tolerance);
     }
   }
 

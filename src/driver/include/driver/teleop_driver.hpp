@@ -20,7 +20,7 @@ private:
   void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
   void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr msg);
   void publish_commands();
-  bool wheels_are_aligned(double tolerance = 0.075) const;
+  bool wheels_are_aligned(double tolerance) const;
   bool feedback_is_fresh() const;
   bool wheels_are_stopped() const;
 
@@ -71,7 +71,6 @@ private:
   // Each steering position and wheel velocity has its own receive time.
   // JointState publishers may send these in separate messages.
   std::array<std::chrono::steady_clock::time_point, 8> feedback_times_{};
-  std::chrono::steady_clock::time_point last_wait_log_{};
 };
 
 }  // namespace teleop_driver
