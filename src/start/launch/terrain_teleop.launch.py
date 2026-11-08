@@ -13,9 +13,11 @@ def launch_setup(context):
     variant = LaunchConfiguration('world').perform(context)
     description_share = get_package_share_directory('description')
     urdf_path = os.path.join(description_share, 'urdf', 'basic_robot.urdf')
-    world_path = os.path.join(
-        description_share, 'worlds', f'lunabotics_terrain_{int(variant):02d}.sdf'
-    )
+    large = variant == 'large'
+    world_file = ('lunabotics_terrain_large.sdf' if large
+                  else f'lunabotics_terrain_{int(variant):02d}.sdf')
+    world_path = os.path.join(description_share, 'worlds', world_file)
+    spawn = ('7.267441860465', '7.5', '1.65') if large else ('1.0', '0.75', '0.75')
     ros_gz_sim = get_package_share_directory('ros_gz_sim')
 
     rsp_node = Node(
@@ -47,7 +49,7 @@ def launch_setup(context):
         arguments=[
             '-topic', 'robot_description',
             '-name', 'melbot',
-            '-x', '1.0', '-y', '0.75', '-z', '0.75', '-Y', '0.0',
+            '-x', spawn[0], '-y', spawn[1], '-z', spawn[2], '-Y', '0.0',
         ],
         output='screen',
     )
@@ -83,8 +85,8 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'world',
             default_value='1',
-            choices=['1', '2', '3', '4', '5', '6'],
-            description='Lunabotics terrain and obstacle-layout variant',
+            choices=['1', '2', '3', '4', '5', '6', 'large'],
+            description='Lunabotics terrain variant, or large for 50 x 50 m testing',
         ),
         OpaqueFunction(function=launch_setup),
     ])

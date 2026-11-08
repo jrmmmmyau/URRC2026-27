@@ -50,6 +50,19 @@ ros2 launch start terrain_teleop.launch.py
 
 The terrain launcher starts Gazebo, spawns Melbot, starts the ROS–Gazebo bridges, and runs the driver node. It also uses the OGRE 1 renderer to avoid the shader crash seen on some integrated graphics systems.
 
+For a **50 × 50 m testing terrain**:
+
+```bash
+ros2 launch start terrain_teleop.launch.py world:=large
+```
+
+This expands terrain 1's layout, with four times the vertical relief and larger
+rocks and craters. It keeps the same obstacle count spread across the larger
+area, so obstacles are sparse. Melbot stays its normal size. The ground and
+collision surface share the same scaling; the starting ground is at z=1.60 m.
+Regenerate this world after changing terrain 1 with
+`python3 map/scripts/generate_large_terrain.py`.
+
 The six terrain variants and the flat Lunabotics arena include the historical
 seven-rock line joining the south perimeter to the central column at the
 construction-zone entrance. This closes the short route south of the column.
