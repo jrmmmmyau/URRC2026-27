@@ -560,6 +560,7 @@ private:
         }
 
         if (std::abs(angle_error) > TURN_THRESHOLD) {
+            current_speed_ = 0.0f;
             cmd_vel.linear.x = 0.0;
 
             if (angle_error > 0) {

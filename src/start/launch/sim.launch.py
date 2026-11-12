@@ -66,7 +66,8 @@ def generate_launch_description():
     driver_node = Node(
         package='driver',
         executable='teleop_driver_node',
-        output='screen'
+        output='screen',
+        parameters=[{'use_sim_time': True}]
     )
 
     #run imu

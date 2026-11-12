@@ -13,6 +13,8 @@ double wheel_y = 0.24;
 double steering_tolerance = 0.075;
 constexpr double steering_release_tolerance = 0.15;  // hysteresis, radians
 constexpr double stopped_speed_tolerance = 0.1;  // wheel rad/s
+constexpr double steering_speed_tolerance = 0.1;  // steering joint rad/s
+constexpr double steering_settle_seconds = 0.2;
 constexpr auto feedback_timeout = std::chrono::milliseconds(500);
 }
 
@@ -75,6 +77,12 @@ void Teleop_driver::joint_state_callback(
           feedback_times_[wheel] = received_at;
         } else {
           feedback_times_[wheel] = {};  // explicitly invalid feedback
+        }
+        if (i < msg->velocity.size() && std::isfinite(msg->velocity[i])) {
+          steering_speeds_[wheel] = msg->velocity[i];
+          feedback_times_[wheel + 8] = received_at;
+        } else {
+          feedback_times_[wheel + 8] = {};
         }
       }
       if (msg->name[i] == wheel_names[wheel]) {
@@ -185,14 +193,25 @@ bool Teleop_driver::wheels_are_stopped() const {
          std::abs(rr_speed_actual_) < stopped_speed_tolerance;
 }
 
+bool Teleop_driver::steering_is_stopped() const {
+  for (double speed : steering_speeds_) {
+    if (std::abs(speed) >= steering_speed_tolerance) {
+      return false;
+    }
+  }
+  return true;
+}
+
 void Teleop_driver::publish_commands() {
   const bool feedback_valid = feedback_is_fresh();
+  const auto now = this->now();
   const bool target_changed =
       fl_target_ != fl_applied_target_ || fr_target_ != fr_applied_target_ ||
       rl_target_ != rl_applied_target_ || rr_target_ != rr_applied_target_;
 
   if (!feedback_valid || target_changed) {
     transition_ = Transition::BRAKING;
+    steering_settling_ = false;
   }
   if (feedback_valid) {
     if (transition_ == Transition::BRAKING && wheels_are_stopped()) {
@@ -201,13 +220,22 @@ void Teleop_driver::publish_commands() {
       rl_applied_target_ = rl_target_;
       rr_applied_target_ = rr_target_;
       transition_ = Transition::STEERING;
+      steering_settling_ = false;
     }
-    if (transition_ == Transition::STEERING &&
-        wheels_are_aligned(steering_tolerance)) {
-      transition_ = Transition::DRIVING;
+    if (transition_ == Transition::STEERING) {
+      if (!wheels_are_aligned(steering_tolerance) || !steering_is_stopped()) {
+        steering_settling_ = false;
+      } else if (!steering_settling_ || now < steering_settled_since_) {
+        steering_settled_since_ = now;
+        steering_settling_ = true;
+      } else if ((now - steering_settled_since_).seconds() >= steering_settle_seconds) {
+        transition_ = Transition::DRIVING;
+        steering_settling_ = false;
+      }
     } else if (transition_ == Transition::DRIVING &&
                !wheels_are_aligned(steering_release_tolerance)) {
       transition_ = Transition::BRAKING;
+      steering_settling_ = false;
     }
   }
 

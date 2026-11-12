@@ -23,6 +23,7 @@ private:
   bool wheels_are_aligned(double tolerance) const;
   bool feedback_is_fresh() const;
   bool wheels_are_stopped() const;
+  bool steering_is_stopped() const;
 
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
@@ -60,6 +61,8 @@ private:
   double rl_speed_actual_ = 0.0;
   double rr_speed_actual_ = 0.0;
 
+  std::array<double, 4> steering_speeds_{};
+
   // Hold these steering commands while the wheels brake.
   double fl_applied_target_ = 0.0;
   double fr_applied_target_ = 0.0;
@@ -68,9 +71,11 @@ private:
 
   enum class Transition { BRAKING, STEERING, DRIVING };
   Transition transition_ = Transition::BRAKING;
-  // Each steering position and wheel velocity has its own receive time.
+  // Each steering position, wheel velocity, and steering velocity has its own receive time.
   // JointState publishers may send these in separate messages.
-  std::array<std::chrono::steady_clock::time_point, 8> feedback_times_{};
+  std::array<std::chrono::steady_clock::time_point, 12> feedback_times_{};
+  bool steering_settling_ = false;
+  rclcpp::Time steering_settled_since_;
 };
 
 }  // namespace teleop_driver
