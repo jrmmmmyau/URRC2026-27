@@ -75,21 +75,23 @@ private:
       return;  // skip nonsense or huge gaps (would cause big jumps)
     }
 
-    const Vec3 accel_body = {
+    const Vec3 accel_body = 
+    {
       msg->linear_acceleration.x,
       msg->linear_acceleration.y,
       msg->linear_acceleration.z};
     Vec3 accel_world = rotate(msg->orientation, accel_body);
 
-    accel_world[2] -= 9.81;
+    accel_world[2] -= 9.8;
+    if(abs(accel_world[2])>1) accel_world[2]=0;
+    // RCLCPP_INFO(this->get_logger(), "z_acc: %.3f",accel_world[2]);
+    // RCLCPP_INFO(this->get_logger(), "old_z_acc: %.3f",old_acc_[2]);
 
     for (int i = 0; i < 3; ++i) {
-      vel_[i] += accel_world[i] * dt;
-      pos_[i] += vel_[i] * dt;
+      vel_[i] += 0.5*(accel_world[i]+old_acc_[i] )* dt;
+      pos_[i] += 0.5*(vel_[i]+old_vel_[i]) * dt;
     }
 
-    vel_[2] = 0.0;
-    pos_[2] = 0.0;
 
     Vec3 vel_body = rotate_inverse(msg->orientation, vel_);
 
@@ -128,7 +130,8 @@ private:
     tf_broadcaster_->sendTransform(t);
 
 
-
+    old_vel_=vel_;
+    old_acc_=accel_world;
   }
 
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr subscriber_;
@@ -136,8 +139,10 @@ private:
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
   // These state variables should remain in the world frame.
-  Vec3 pos_{10.0, 10.0, 0.0};
+  Vec3 pos_{10.0, 10.0,0.0}; //change this for the actual robot
   Vec3 vel_{0.0, 0.0, 0.0};
+  Vec3 old_acc_{0, 0, 0};
+  Vec3 old_vel_{0.0, 0.0, 0.0};
   rclcpp::Time last_time_;
   bool has_last_time_ = false;
 };
