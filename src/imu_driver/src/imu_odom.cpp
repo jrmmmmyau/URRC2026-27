@@ -83,7 +83,7 @@ private:
     Vec3 accel_world = rotate(msg->orientation, accel_body);
 
     accel_world[2] -= 9.8;
-    if(abs(accel_world[2])>1) accel_world[2]=0;
+    if(abs(accel_world[2])>5) accel_world[2]=0;
     // RCLCPP_INFO(this->get_logger(), "z_acc: %.3f",accel_world[2]);
     // RCLCPP_INFO(this->get_logger(), "old_z_acc: %.3f",old_acc_[2]);
 
