@@ -1,0 +1,12 @@
+<library path="gui">
+    <class
+        name="gui/MainPanel"
+        type="gui::MainPanel"
+        base_class_type="rviz_common::Panel">
+
+        <description>
+            A gui panel for the URRC2026-27 project.    
+        </description>
+    
+    </class>
+</library>
