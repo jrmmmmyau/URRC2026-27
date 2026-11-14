@@ -399,10 +399,6 @@
        ========================================================= -->
   <xacro:include filename="camera.xacro"/>
 
-  <xacro:realsense name="front_camera" parent="chassis">
-    <origin xyz="0.36 0 0.39" rpy="0 ${pi/4} 0"/>
-  </xacro:realsense>
-
   <link name="top_camera_holder_link">
     <visual>
       <geometry><cylinder radius="0.04" length="0.04"/></geometry>
@@ -414,12 +410,10 @@
     </inertial>
   </link>
 
-  <joint name="top_camera_holder_joint" type="continuous">
+  <joint name="top_camera_holder_joint" type="fixed">
     <parent link="chassis"/>
     <child link="top_camera_holder_link"/>
-    <origin xyz="0.36 0 0.45" rpy="0 0 0"/>  
-    <axis xyz="0 0 1"/>
-    <dynamics damping="0.1"/>
+    <origin xyz="0.36 0 0.45" rpy="0 0 0"/>
   </joint>
 
   <xacro:realsense name="top_camera" parent="top_camera_holder_link">
@@ -475,10 +469,6 @@ gazebo plug in for joints
       <joint_name>rear_right_wheel_spin_joint</joint_name>
       <topic>/cmd_vel/rr_wheel</topic>
     </plugin>
-    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
-      <joint_name>top_camera_holder_joint</joint_name>
-      <topic>/cmd_vel/camera</topic>
-    </plugin>
     <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
       <joint_name>front_left_steering_joint</joint_name>
       <joint_name>front_right_steering_joint</joint_name>
@@ -488,7 +478,6 @@ gazebo plug in for joints
       <joint_name>front_right_wheel_spin_joint</joint_name>
       <joint_name>rear_left_wheel_spin_joint</joint_name>
       <joint_name>rear_right_wheel_spin_joint</joint_name>
-      <joint_name>top_camera_holder_joint</joint_name>
     </plugin>
 
     <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
