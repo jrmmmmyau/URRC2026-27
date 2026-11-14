@@ -20,7 +20,7 @@ public:
 
         const double pos_std = declare_parameter<double>("position_stddev", 0.05);  // meters sd
         const double ang_std = declare_parameter<double>("angle_stddev", 0.05);     // radians sd
-        move_threshold_ = declare_parameter<double>("move_threshold", 0.3); // meters
+        move_threshold_ = declare_parameter<double>("move_threshold", 0.1); // meters
 
         pos_var_ = pos_std * pos_std; // variance
         ang_var_ = ang_std * ang_std;
@@ -96,9 +96,10 @@ private:
             double move_distance_squared = (out.pose.pose.position.x-last_pose_.pose.pose.position.x) * (out.pose.pose.position.x-last_pose_.pose.pose.position.x) +
                                                    (out.pose.pose.position.y-last_pose_.pose.pose.position.y) * (out.pose.pose.position.y-last_pose_.pose.pose.position.y) +
                                                    (out.pose.pose.position.z-last_pose_.pose.pose.position.z) * (out.pose.pose.position.z-last_pose_.pose.pose.position.z);
-            if(has_last_pose_ &&
+            RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 2000, "Robot moved %.2f meters", sqrt(move_distance_squared));
+            if (has_last_pose_ &&
                 move_distance_squared > move_threshold_ * move_threshold_) {
-                RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000, "Robot moved %.2f meters, more than %.2f meters limit from the last pose estimate. Ignoring this pose.", sqrt(move_distance_squared), move_threshold_);
+                // RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000, "Robot moved %.2f meters, more than %.2f meters limit from the last pose estimate. Ignoring this pose.", sqrt(move_distance_squared), move_threshold_);
                 last_pose_ = out;
                 continue; // Skip publishing this pose
             }
