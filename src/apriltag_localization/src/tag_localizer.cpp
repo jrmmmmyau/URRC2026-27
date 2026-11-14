@@ -94,7 +94,8 @@ private:
 
             tf2::toMsg(map_to_base, out.pose.pose);
 
-            if((out.pose.pose.position.x-last_pose_.pose.pose.position.x) * (out.pose.pose.position.x-last_pose_.pose.pose.position.x) +
+            if(has_last_pose_ &&
+               (out.pose.pose.position.x-last_pose_.pose.pose.position.x) * (out.pose.pose.position.x-last_pose_.pose.pose.position.x) +
                (out.pose.pose.position.y-last_pose_.pose.pose.position.y) * (out.pose.pose.position.y-last_pose_.pose.pose.position.y) +
                (out.pose.pose.position.z-last_pose_.pose.pose.position.z) * (out.pose.pose.position.z-last_pose_.pose.pose.position.z) > move_threshold_ * move_threshold_) {
                 // RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000, "Robot moved more than %.2f meters from the last pose estimate. Ignoring this pose.", move_threshold_);
@@ -108,6 +109,7 @@ private:
             out.pose.covariance[28] = ang_var_; // pitch
             out.pose.covariance[35] = ang_var_; // yaw
             last_pose_ = out; // Store the last published pose
+            has_last_pose_ = true;
             pub_->publish(out);
         }
     }
@@ -122,6 +124,7 @@ private:
     rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pub_;
     double move_threshold_; // meters
     geometry_msgs::msg::PoseWithCovarianceStamped last_pose_; // Store the last published pose
+    bool has_last_pose_{false};
 
 };
 
