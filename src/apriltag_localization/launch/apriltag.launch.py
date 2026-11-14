@@ -12,18 +12,18 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        # Node(
-        #     package='image_proc',
-        #     executable='rectify_node',
-        #     remappings=[('image', '/camera/front_camera/color/image_raw'),
-        #                 ('camera_info', '/camera/front_camera/color/camera_info'),]
-        # ),
+        Node(
+            package='image_proc',
+            executable='rectify_node',
+            remappings=[('image', '/camera/front_camera/color/image_raw'),
+                        ('camera_info', '/camera/front_camera/color/camera_info'),]
+        ),
         
         Node(
             package='apriltag_ros',
             executable='apriltag_node',
             parameters=[config],
-            remappings=[('image_rect', '/camera/front_camera/color/image_raw'),
+            remappings=[('image_rect', '/image_rect'),
                         ('camera_info', '/camera/front_camera/color/camera_info'),]
         ),
         # Node(
