@@ -16,7 +16,8 @@ def generate_launch_description():
             package='image_proc',
             executable='rectify_node',
             remappings=[('image', '/camera/top_camera/color/image_raw'),
-                        ('camera_info', '/camera/top_camera/color/camera_info'),]
+                        ('camera_info', '/camera/top_camera/color/camera_info'),],
+            arguments=['--ros-args', '--log-level', 'error'],
         ),
         
         Node(
@@ -24,7 +25,8 @@ def generate_launch_description():
             executable='apriltag_node',
             parameters=[config],
             remappings=[('image_rect', '/image_rect'),
-                        ('camera_info', '/camera/top_camera/color/camera_info'),]
+                        ('camera_info', '/camera/top_camera/color/camera_info'),],
+            arguments=['--ros-args', '--log-level', 'error'],
         ),
         # Node(
         #     package='tf2_ros',
