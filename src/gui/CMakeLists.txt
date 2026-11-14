@@ -7,6 +7,8 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(rviz_rendering REQUIRED)
+find_package(rviz_default_plugins REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -34,6 +36,8 @@ ament_target_dependencies(gui
   sensor_msgs
   cv_bridge
   rviz_common
+  rviz_rendering
+  rviz_default_plugins
   pluginlib
 )
 

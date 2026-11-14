@@ -2,7 +2,11 @@
 #define GUI__MAIN_PANEL_HPP_
 
 #include <memory>
+
 #include <rviz_common/panel.hpp>
+#include <rviz_common/render_panel.hpp>
+#include <rviz_common/visualization_manager.hpp>
+
 #include <rviz_common/ros_integration/ros_node_abstraction.hpp>
 #include <rviz_common/ros_integration/ros_node_abstraction_iface.hpp>
 
@@ -25,6 +29,13 @@ public:
 private:
     // ros
     std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> node_ptr_;
+
+    // rviz visual for map hopefully
+    std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> rviz_node_ptr;
+
+    //embedded rviz
+    rviz_common::RenderPanel * map_view_;
+    std::unique_ptr<rviz_common::VisualizationManager> rviz_manager_;
 
     // camera
     QLabel * camera_view_;

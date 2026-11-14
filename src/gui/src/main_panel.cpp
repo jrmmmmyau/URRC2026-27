@@ -1,6 +1,11 @@
 #include "gui/main_panel.hpp"
 
 #include <rviz_common/display_context.hpp>
+#include <rviz_common/display.hpp>
+#include <rviz_common/properties/property.hpp>
+#include <rviz_common/view_manager.hpp>
+#include <rviz_rendering/render_window.hpp>
+
 #include <rviz_common/ros_integration/ros_node_abstraction.hpp>
 #include <cv_bridge/cv_bridge.hpp>
 #include <sensor_msgs/image_encodings.hpp>
@@ -23,9 +28,9 @@ namespace gui
 {
 // Constructor
 MainPanel::MainPanel(QWidget * parent)
-: rviz_common::Panel(parent), camera_view_(nullptr)
+: rviz_common::Panel(parent), map_view_(nullptr),  camera_view_(nullptr)
 {
-    // overall layour
+    // overall layout
     auto* main_layout = new QHBoxLayout(this);
 
     main_layout->setContentsMargins(8, 8, 8, 8);
@@ -45,11 +50,21 @@ MainPanel::MainPanel(QWidget * parent)
     left_layout->addWidget(camera_view_, 1);
     left_layout->addStretch(2);
 
-    // center column (only the map whatever form we end up going with - im gonna just do occupancy grid for now)
+    // center column (only the map)
     auto* center_layout = new QVBoxLayout();
 
-    // right column (more buttons idk what yet)
+    // rviz render panel
+    map_view_ = new rviz_common::RenderPanel(this);
+    
+    map_view_->setMinimumSize(300, 300);
+    map_view_->setSizePolicy(
+        QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    center_layout->addWidget(map_view_);
+
+    // right column (more buttons idk what yet, probably some click to nav)
     auto* right_layout = new QVBoxLayout();
+    right_layout->addStretch();
 
     // add columns to main layout
     main_layout->addLayout(left_layout, 1);
@@ -75,6 +90,21 @@ void MainPanel::onInitialize()
         "/camera/camera/color/image_raw", 
         rclcpp::SensorDataQoS(),
         std::bind(&MainPanel::imageCallback, this, std::placeholders::_1));
+
+    // init embedded rviz panel
+    rviz_common::Display * map_display = rviz_manager_->createDisplay(
+        "rviz_default_plugins/Map", "Occupancy Grid", true);
+
+    if (map_display) {
+        auto* topic_property = map_display->subProp("Topic");
+
+        if (topic_property) {
+            topic_property->setValue("/occupancy_grid");
+        }
+    } else {
+        RCLCPP_ERROR(
+            rviz_node_ptr->get_raw_node()->get_logger(), "Failed to create occupancy grid");
+    }
 }
 
 // Callback function for image subscription
