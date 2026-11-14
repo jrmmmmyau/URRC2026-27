@@ -50,6 +50,7 @@ def generate_launch_description():
             '/cmd_vel/rr_wheel@std_msgs/msg/Float64]gz.msgs.Double',
             '/world/empty/model/melbot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model',
             '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
+            '/cmd_vel/camera@std_msgs/msg/Float64]gz.msgs.Double',
         ],
         remappings=[
             ('/world/empty/model/melbot/joint_state', '/joint_states'),

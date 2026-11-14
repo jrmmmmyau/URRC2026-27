@@ -33,6 +33,8 @@ private:
   Float64Publisher rl_wheel_pub_;
   Float64Publisher rr_wheel_pub_;
 
+  Float64Publisher camera_vel_pub_;
+
   double fl_angle_ = 0.0;
   double fr_angle_ = 0.0;
   double rl_angle_ = 0.0;
