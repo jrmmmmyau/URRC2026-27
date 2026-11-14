@@ -14,7 +14,7 @@
 #include "costmap.hpp"
 #include "costmap_params.hpp"
 
-// A cell counts as "changed" if its decoded value moved by at least this much (0..254 scale)
+// A cell counts as "changed" if its decoded value moved by at least this much (0..100 scale)
 // or it flipped between unknown and known.
 const int CELL_CHANGE_MIN = 30;
 // Only run the (more expensive) path check once this many cells changed since the last verified map.

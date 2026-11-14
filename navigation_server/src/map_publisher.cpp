@@ -2,6 +2,7 @@
 #include "nav_msgs/msg/occupancy_grid.hpp"
 
 #include <chrono>
+#include <cmath>
 #include <fstream>
 #include <stdexcept>
 #include <string>
@@ -21,18 +22,19 @@ public:
       throw std::runtime_error("Could not open map2.pgm");
     }
 
-    std::string magic = next_token(image_file);
+    bool is_v2 = false;
+    std::string magic = next_token(image_file, is_v2);
     if (magic != "P2" && magic != "P5") {
       throw std::runtime_error("Unsupported PGM format");
     }
-    const int width = std::stoi(next_token(image_file));
-    const int height = std::stoi(next_token(image_file));
-    const int max_value = std::stoi(next_token(image_file));
+    const int width = std::stoi(next_token(image_file, is_v2));
+    const int height = std::stoi(next_token(image_file, is_v2));
+    const int max_value = std::stoi(next_token(image_file, is_v2));
     std::vector<int> pixels(static_cast<size_t>(width) * static_cast<size_t>(height));
 
     if (magic == "P2") {
       for (int &pixel : pixels) {
-        pixel = std::stoi(next_token(image_file));
+        pixel = std::stoi(next_token(image_file, is_v2));
       }
     } else {
       image_file.get();
@@ -75,12 +77,13 @@ public:
         const int pixel = pixels[static_cast<size_t>(x) +
           static_cast<size_t>(height - 1 - y) * static_cast<size_t>(width)];
 
-        if (pixel > 127) {
-          // White = free
-          map_.data.push_back(0);
+        if (is_v2 && pixel == 255) {
+          map_.data.push_back(-1);
         } else {
-          // Black = obstacle
-          map_.data.push_back(100);
+          const double pixel_max = is_v2 ? 254.0 : static_cast<double>(max_value);
+          const int occupancy = static_cast<int>(std::lround(
+            100.0 * (pixel_max - pixel) / pixel_max));
+          map_.data.push_back(static_cast<int8_t>(occupancy));
         }
       }
     }
@@ -95,13 +98,16 @@ public:
   }
 
 private:
-  static std::string next_token(std::istream &stream)
+  static std::string next_token(std::istream &stream, bool &is_v2)
   {
     std::string token;
     while (stream >> token) {
       if (!token.empty() && token[0] == '#') {
         std::string ignored;
         std::getline(stream, ignored);
+        if (ignored.find("UR_MAP_V2:") != std::string::npos) {
+          is_v2 = true;
+        }
         continue;
       }
       return token;

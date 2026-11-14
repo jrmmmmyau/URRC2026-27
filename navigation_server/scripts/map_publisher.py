@@ -46,13 +46,9 @@ class MapPublisher(Node):
             for x in range(image.width):
 
                 pixel = pixels[x, image.height - 1 - y]
-
-                if pixel > 127:
-                    # White = free
-                    self.map.data.append(0)
-                else:
-                    # Black = obstacle
-                    self.map.data.append(100)
+                # PGM convention: black is occupied, white is free.
+                occupancy = round(100 * (255 - pixel) / 255)
+                self.map.data.append(occupancy)
 
         self.get_logger().info(
             f'Created occupancy grid with {len(self.map.data)} cells'
