@@ -16,9 +16,11 @@ public:
         map_frame_ = declare_parameter<std::string>("map_frame", "map");
         base_frame_ = declare_parameter<std::string>("base_frame", "base_link");
         tag_prefix_ = declare_parameter<std::string>("tag_frame_prefix", "tag36h11:");
+        
 
         const double pos_std = declare_parameter<double>("position_stddev", 0.05);  // meters sd
         const double ang_std = declare_parameter<double>("angle_stddev", 0.05);     // radians sd
+        move_threshold_ = declare_parameter<double>("move_threshold", 0.02); // meters
 
         pos_var_ = pos_std * pos_std; // variance
         ang_var_ = ang_std * ang_std;
@@ -92,6 +94,12 @@ private:
 
             tf2::toMsg(map_to_base, out.pose.pose);
 
+            if(out.pose.pose.position.x * out.pose.pose.position.x +
+               out.pose.pose.position.y * out.pose.pose.position.y +
+               out.pose.pose.position.z * out.pose.pose.position.z > move_threshold_ * move_threshold_) {
+                continue; // Skip publishing this pose
+            }
+
             out.pose.covariance[0]  = pos_var_; // x
             out.pose.covariance[7]  = pos_var_; // y
             out.pose.covariance[14] = pos_var_; // z
@@ -111,6 +119,7 @@ private:
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
     rclcpp::Subscription<apriltag_msgs::msg::AprilTagDetectionArray>::SharedPtr sub_;
     rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pub_;
+    double move_threshold_; // meters
 
 };
 
