@@ -20,3 +20,4 @@ __pycache__/
 # ROS 2 generated
 *.log
 colcon.meta
+apriltag_debug/

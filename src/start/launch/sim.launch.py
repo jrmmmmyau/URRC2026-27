@@ -1,3 +1,5 @@
+#launch teleop in another terminal if neccsary
+
 import os
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
@@ -23,14 +25,16 @@ def generate_launch_description():
             'use_sim_time': True,
         }]
     )
+    
     gazebo=IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(ros_gz_sim, 'launch','gz_sim.launch.py')]),
         launch_arguments={'gz_args':'empty.sdf -r'}.items()
     )
+   
     spawn_node=Node(
         package='ros_gz_sim',
         executable='create',
-        arguments=['-topic','robot_description','-name','melbot','-z','0.01'],
+        arguments=['-topic','robot_description','-name','melbot','-x','10','-y','10','-z','0.01'],
         output='screen'
     )
     # convert to gz format
@@ -48,10 +52,12 @@ def generate_launch_description():
             '/cmd_vel/rr_wheel@std_msgs/msg/Float64]gz.msgs.Double',
             '/world/empty/model/melbot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model',
             '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/cmd_vel/camera@std_msgs/msg/Float64]gz.msgs.Double',
         ],
         remappings=[
-            ('/world/empty/model/melbot/joint_state', '/joint_states')
+            ('/world/empty/model/melbot/joint_state', '/joint_states'),
+            ('/imu','/imu_data')
         ],
         output='screen'
     )
@@ -59,8 +65,17 @@ def generate_launch_description():
     # run driver code
     driver_node = Node(
         package='driver',
-        executable='driver_node',
-        output='screen'
+        executable='teleop_driver_node',
+        output='screen',
+        parameters=[{'use_sim_time': True}]
     )
 
-    return LaunchDescription([rsp_node, gazebo, spawn_node, bridge_node, driver_node])
+    #run imu
+    imu_driver = Node(
+        package='imu_driver',
+        executable='imu_odom',
+        output='screen',
+        parameters=[{'use_sim_time': True}]
+    )
+
+    return LaunchDescription([rsp_node, gazebo, spawn_node, bridge_node, driver_node, imu_driver])

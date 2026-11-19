@@ -33,7 +33,7 @@
     <gazebo reference="${name}_link">
         <sensor name="${name}" type="rgbd_camera">
         <always_on>true</always_on>
-        <update_rate>30</update_rate>
+        <update_rate>10</update_rate>
         <visualize>true</visualize>
         <topic>${name}</topic>
         <gz_frame_id>${name}_optical_link</gz_frame_id>

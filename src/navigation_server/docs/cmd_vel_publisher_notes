@@ -1,0 +1,17 @@
+# CMD_VEL publisher
+
+## Purpose
+outputs the velocity that the robot should be moving at regular intervals
+
+## Inputs
+- Current odometry
+- Current Path
+- if nav_srv is making a path
+- path waypoints
+
+## Outputs
+- cmd_vel
+
+## Behavior
+- if nav_srv is making a path, stop
+- how fast should the robot be moving / turning to follow the current path

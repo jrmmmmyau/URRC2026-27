@@ -1,0 +1,5 @@
+for nav_test to work you have to run it in one terminal and in another terminal run
+ros2 run navigation_server test_map_publisher
+
+it needs manual input
+also you might have to tell rviz2 to show the odometry
