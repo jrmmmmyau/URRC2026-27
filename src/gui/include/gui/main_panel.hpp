@@ -10,8 +10,13 @@
 #include <rviz_common/ros_integration/ros_node_abstraction.hpp>
 #include <rviz_common/ros_integration/ros_node_abstraction_iface.hpp>
 
+#include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <nav_msgs/msg/occupancy_grid.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+
 #include <QLabel>
+#include <QWidget>
 
 namespace gui
 {
@@ -29,8 +34,8 @@ public:
 private:
     // ros
     std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> node_ptr_;
-
-    // rviz visual for map hopefully
+    
+     // Separate ROS node for the embedded RViz instance
     std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> rviz_node_ptr;
 
     //embedded rviz
@@ -42,6 +47,11 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_sub_;
 
     void imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr msg);
+
+    // pose view
+    QLabel * pose_view_;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+    void odomCallback(const nav_msgs::msg::Odometry::ConstSharedPtr msg);
 };
 }  // namespace gui
 
