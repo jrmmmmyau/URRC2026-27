@@ -238,9 +238,8 @@ private:
          *   white   = free
          *   gray    = intermediate cost
          *
-         * OccupancyGrid stores signed int8 values. We explicitly
-         * convert unknown to -1 so it is not confused with an
-         * ordinary unsigned cost value.
+         * Convert the editor's 0..254 grayscale occupancy scale
+         * to OccupancyGrid's 0..100 scale, preserving unknown as -1.
          *
          * Flip the vertical direction because PGM rows start at
          * the top, while the map convention starts at the bottom.
@@ -264,34 +263,18 @@ private:
                     {
                         occupancy = -1;       // Unknown
                     }
-                    else if (pixel == 254)
-                    {
-                        occupancy = 0;        // Free
-                    }
-                    else if (pixel == 0)
-                    {
-                        occupancy = 254;      // Occupied
-                    }
                     else
                     {
-                        // Preserve grayscale costs in the
-                        // editor's custom encoding.
-                        occupancy = 254 - pixel;
+                        // UR_MAP_V2: black is occupied, white is free.
+                        occupancy = static_cast<int>(std::lround(
+                            100.0 * (254 - pixel) / 254.0));
                     }
                 }
                 else
                 {
-                    // Legacy maps: black is occupied and white
-                    // is free. Avoid producing -1 from a
-                    // fully occupied pixel.
-                    if (pixel == 0)
-                    {
-                        occupancy = 254;
-                    }
-                    else
-                    {
-                        occupancy = max_value - pixel;
-                    }
+                    // Legacy PGM maps: black is occupied and white is free.
+                    occupancy = static_cast<int>(std::lround(
+                        100.0 * (max_value - pixel) / max_value));
                 }
 
                 map.data.push_back(

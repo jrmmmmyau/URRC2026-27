@@ -2,10 +2,9 @@
 // Shared costmap builder for the A* planner and the map verifier.
 // No ROS dependency: pass in OccupancyGrid fields (data, width, height, resolution).
 //
-// Cell encoding (OccupancyGrid.data is int8_t, so grayscale bytes arrive wrapped):
-//   raw -1        -> UNKNOWN
-//   any other raw -> unsigned byte 0..254, 0 = free, larger = more occupied
-// (so a fully occupied cell must be sent as 254, not 255)
+// Cell encoding follows nav_msgs/OccupancyGrid:
+//   -1      -> UNKNOWN
+//   0..100  -> free to fully occupied
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -17,7 +16,7 @@ constexpr int UNKNOWN = -1;
 
 inline int decode_cell(int8_t raw)
 {
-    return raw == -1 ? UNKNOWN : static_cast<int>(static_cast<uint8_t>(raw));
+    return raw == -1 ? UNKNOWN : std::clamp(static_cast<int>(raw), 0, 100);
 }
 
 struct Params {
@@ -26,7 +25,7 @@ struct Params {
     float inflation_radius = 1.5f;   // m from nearest lethal cell; no cost beyond this
     float inflation_scale = 10.0f;   // step cost at the edge of the blocked zone
     float cost_decay = 3.0f;         // 1/m, how fast inflation cost falls off
-    int occupied_threshold = 165;    // decoded value >= this is lethal (0..254 scale)
+    int occupied_threshold = 65;    // decoded value >= this is lethal (0..100 scale)
     float gray_weight = 2.0f;        // step cost added at value == occupied_threshold
     bool allow_unknown = true;       // plan through unknown cells (optimistic)
     float unknown_cost = 3.0f;       // extra step cost for entering unknown cells
