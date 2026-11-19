@@ -87,10 +87,11 @@ private:
     // RCLCPP_INFO(this->get_logger(), "z_acc: %.3f",accel_world[2]);
     // RCLCPP_INFO(this->get_logger(), "old_z_acc: %.3f",old_acc_[2]);
 
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 2; ++i) {
       vel_[i] += 0.5*(accel_world[i]+old_acc_[i] )* dt;
       pos_[i] += 0.5*(vel_[i]+old_vel_[i]) * dt;
     }
+    pos_[2]=0.0; //keep z position at 0
 
 
     Vec3 vel_body = rotate_inverse(msg->orientation, vel_);
