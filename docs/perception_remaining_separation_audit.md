@@ -44,14 +44,7 @@ Depth world projection, pose interpolation/history, pending-frame handling, retr
 
 ## Verification
 
-```bash
-python3 tests/tag_separation/run.py --sanitize
-python3 tests/tag_separation/check_contract.py
-python3 tests/perception_depth/run.py --sanitize
-python3 tests/perception_depth/check_contract.py
-```
-
-The tag fixture remains the original localizer at `c4bb1577c49964f7c9fb7d12b09be3d35e324e92`, with SHA-256 `c41f55f36d0c78dd37a59b5c6631fcf47103d9cb55154c7834cbab7f025938ff`. Its 212-frame callback comparison checks the retained calculation/output behavior with explicit test doubles. The depth suite now checks standalone perception helpers only; deleted map tests no longer represent current coverage.
+The optional synthetic test harnesses and original-code comparison fixture were removed at the user's request. Previously reported test results are historical; no test runners remain in the checkout. Runtime source is unchanged by this removal.
 
 The separation necessarily changes message transport and startup. The observer may attempt TF lookup for unknown field IDs before localization rejects them, and its prefix default matches the configured `tag_` detector. Depth XYZ encoding also retains the previously added vertical coordinate and image/calibration validation. These differences are documented in the perception README and require live validation where applicable.
 

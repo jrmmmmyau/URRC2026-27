@@ -164,9 +164,9 @@ Keep future code changes limited to those needed for separation and interfaces. 
 
 ## Validation status
 
+The optional synthetic test harnesses were removed at the user's request. Earlier local check results do not establish a successful ROS build or live run.
+
 - Local checks cover Python syntax, YAML/XML structure, dependency declarations, and preservation of detector settings and localization parameters.
-- `python3 tests/perception_depth/run.py --sanitize` checks retained camera-depth sampling and FLOAT64 encoding. `python3 tests/perception_depth/check_contract.py` checks declarations and removal of the world-mode additions. See the [depth test README](../../tests/perception_depth/README.md).
-- `python3 tests/tag_separation/run.py --sanitize` compares 212 frames through the actual old/new callback bodies using explicit message/TF/arithmetic test doubles. `python3 tests/tag_separation/check_contract.py` checks schema and launch/configuration/dependency agreement. These do not validate ROS generation, real tf2, or DDS; see the [tag regression README](../../tests/tag_separation/README.md).
 - Package discovery can be checked with `colcon list`; it is separate from build and runtime verification.
 - All new code, configuration, comments, and documentation use English.
 - The current local environment lacks `ament_cmake`, `launch`, and `launch_ros`. The Step 2 build attempt stopped at the missing build dependency. ROS node compilation, cv_bridge decoding, real launch, message delivery, TF lookup, pose output, and depth output still require verification in ROS 2 Jazzy.

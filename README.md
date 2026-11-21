@@ -50,7 +50,6 @@ Detector settings are in `src/perception/config/apriltag.yaml`; tag-frame naming
 
 Both observer and localization launches accept `base_frame`, `observations_topic`, and `use_sim_time`. Set them consistently; the combined launch forwards the same `base_frame` and `observations_topic` to both. Independent executable users must supply the equivalent topic remapping.
 
-Local tag checks (including their explicit non-ROS test scope) are documented in [the tag regression README](tests/tag_separation/README.md).
 
 See the [perception README](src/perception/README.md) for input topics, TF responsibilities, and validation limits.
 
@@ -79,13 +78,6 @@ ros2 run navigation_server test_map_publisher
 
 The publisher accepts interactive input; type `help` for its commands. Navigation source, maps, settings, and launch files are unchanged. These commands describe the existing workflow, not a new runtime certification.
 
-## Local verification
+## Validation status
 
-```bash
-python3 tests/tag_separation/run.py --sanitize
-python3 tests/tag_separation/check_contract.py
-python3 tests/perception_depth/run.py --sanitize
-python3 tests/perception_depth/check_contract.py
-```
-
-The tests check the retained tag extraction and camera-depth helpers without ROS. Full ROS compilation, message generation, launch, and live camera checks remain pending. See the [updated scope and plan](docs/perception_separation_plan.md). Future work is limited to separation, packaging, and necessary interface/startup changes; new algorithms require explicit approval.
+The optional synthetic test harnesses were removed at the user's request. Full ROS compilation, message generation, launch, and live camera checks remain pending. See [RUN.md](RUN.md) for commands and the [updated scope and plan](docs/perception_separation_plan.md) for task boundaries.

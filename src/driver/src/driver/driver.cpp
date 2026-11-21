@@ -1,10 +1,10 @@
-#include "driver/teleop_driver.hpp"
+#include "driver/driver.hpp"
 
 #include <chrono>
 #include <cmath>
 #include <functional>
 
-namespace teleop_driver {
+namespace driver {
 
 namespace {
 double wheel_radius = 0.09;
@@ -16,14 +16,14 @@ constexpr double stopped_speed_tolerance = 0.1;  // wheel rad/s
 constexpr auto feedback_timeout = std::chrono::milliseconds(500);
 }
 
-Teleop_driver::Teleop_driver() : Node("teleop_driver") {
+Driver::Driver() : Node("driver") {
   cmd_vel_sub_ = create_subscription<geometry_msgs::msg::Twist>(
       "/cmd_vel", 10,
-      std::bind(&Teleop_driver::cmd_vel_callback, this, std::placeholders::_1));
+      std::bind(&Driver::cmd_vel_callback, this, std::placeholders::_1));
 
   joint_state_sub_ = create_subscription<sensor_msgs::msg::JointState>(
       "/joint_states", 10,
-      std::bind(&Teleop_driver::joint_state_callback, this, std::placeholders::_1));
+      std::bind(&Driver::joint_state_callback, this, std::placeholders::_1));
 
   fl_steering_pub_ = create_publisher<std_msgs::msg::Float64>(
       "/cmd_pos/fl_steering", 10);
@@ -44,12 +44,12 @@ Teleop_driver::Teleop_driver() : Node("teleop_driver") {
       "/cmd_vel/rr_wheel", 10);
   timer_ = create_wall_timer(
       std::chrono::milliseconds(20),
-      std::bind(&Teleop_driver::publish_commands, this));
+      std::bind(&Driver::publish_commands, this));
 
-  RCLCPP_INFO(get_logger(), "Teleop_driver node started");
+  RCLCPP_INFO(get_logger(), "Driver node started");
 }
 
-void Teleop_driver::joint_state_callback(
+void Driver::joint_state_callback(
     const sensor_msgs::msg::JointState::SharedPtr msg) {
   // Accumulate independent joint updates, without refreshing missing values.
   const auto received_at = std::chrono::steady_clock::now();
@@ -85,7 +85,7 @@ void Teleop_driver::joint_state_callback(
 
 }
 
-void Teleop_driver::cmd_vel_callback(
+void Driver::cmd_vel_callback(
     const geometry_msgs::msg::Twist::SharedPtr msg) {
 
   // Robot coordinates:
@@ -199,20 +199,11 @@ void Teleop_driver::cmd_vel_callback(
       rr_angle_, rr_target_, rr_speed_cmd_);
 }
 
-  // Stop the wheels while retaining the requested steering position.
-  else {
-    fl_speed_cmd_ = 0.0;
-    fr_speed_cmd_ = 0.0;
-    rl_speed_cmd_ = 0.0;
-    rr_speed_cmd_ = 0.0;
-  }
-}
-
 double angle_error(double target, double current){
   return std::atan2(std::sin(target-current), std::cos(target-current));
 }
 
-bool Teleop_driver::feedback_is_fresh() const {
+bool Driver::feedback_is_fresh() const {
   const auto now = std::chrono::steady_clock::now();
   for (const auto &stamp : feedback_times_) {
     if (stamp == std::chrono::steady_clock::time_point{} ||
@@ -223,7 +214,7 @@ bool Teleop_driver::feedback_is_fresh() const {
   return true;
 }
 
-bool Teleop_driver::wheels_are_aligned(double tolerance) const {
+bool Driver::wheels_are_aligned(double tolerance) const {
   if (!feedback_is_fresh()) {
     return false;
   }
@@ -241,7 +232,7 @@ bool Teleop_driver::wheels_are_aligned(double tolerance) const {
          std::abs(angle_error(rr_target_ , rr_angle_)) < tolerance;
 }
 
-bool Teleop_driver::wheels_are_stopped() const {
+bool Driver::wheels_are_stopped() const {
   return feedback_is_fresh() &&
          std::abs(fl_speed_actual_) < stopped_speed_tolerance &&
          std::abs(fr_speed_actual_) < stopped_speed_tolerance &&
@@ -249,7 +240,7 @@ bool Teleop_driver::wheels_are_stopped() const {
          std::abs(rr_speed_actual_) < stopped_speed_tolerance;
 }
 
-void Teleop_driver::publish_commands() {
+void Driver::publish_commands() {
   const bool feedback_valid = feedback_is_fresh();
   const bool target_changed =
       fl_target_ != fl_applied_target_ || fr_target_ != fr_applied_target_ ||
@@ -319,4 +310,4 @@ void Teleop_driver::publish_commands() {
   rr_wheel_pub_->publish(rr_wheel);
 }
 
-}  // namespace teleop_driver
+}  // namespace driver

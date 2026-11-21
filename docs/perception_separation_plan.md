@@ -64,15 +64,6 @@ Further work should first review the retained extraction against the original. A
 
 ## Validation and practical limits
 
-```bash
-python3 tests/tag_separation/run.py --sanitize
-python3 tests/tag_separation/check_contract.py
-python3 tests/perception_depth/run.py --sanitize
-python3 tests/perception_depth/check_contract.py
-```
-
-The tag suite compares 212 frames through extracted original/current callbacks and checks that the localization calculation/output block remains unchanged. The depth suite tests retained sampling and cloud encoding without a mapper. Static checks cover package declarations, syntax, topics, and absence of removed world-mode connections. See the test READMEs for exact scope.
-
-These tests use local C++ helpers and explicit test doubles. They do not establish ROS node compilation, generated-interface compatibility, actual tf2/DDS behavior, launch execution, or live camera performance. ROS 2 Jazzy validation remains pending. Earlier counts from the deleted mapping suites are historical results, not coverage of the current checkout.
+The optional synthetic test harnesses and their reference fixture were removed at the user's request. Earlier local checks were performed before removal; no test runners are included now. Full ROS compilation, generated messages, actual TF/DDS behavior, launch execution, and camera validation remain pending. See [RUN.md](../RUN.md) for the short run guide.
 
 The existing AprilTag test launch still disables depth and retains its simulation/real-camera setup. Navigation's intentional dependency declarations remain untouched. Keep its test-map workflow; do not substitute a perception-produced map.
