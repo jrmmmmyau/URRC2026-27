@@ -379,11 +379,7 @@
       <visualize>true</visualize>
       <topic>imu</topic>
       <gz_frame_id>imu_link</gz_frame_id>
-<<<<<<< HEAD
-      <imu>
-=======
       <!-- <imu>
->>>>>>> origin
         <angular_velocity>
           <x><noise type="gaussian"><mean>0</mean><stddev>2e-4</stddev></noise></x>
           <y><noise type="gaussian"><mean>0</mean><stddev>2e-4</stddev></noise></y>
@@ -394,8 +390,6 @@
           <y><noise type="gaussian"><mean>0</mean><stddev>1.7e-2</stddev></noise></y>
           <z><noise type="gaussian"><mean>0</mean><stddev>1.7e-2</stddev></noise></z>
         </linear_acceleration>
-<<<<<<< HEAD
-=======
       </imu> -->
       <imu>
         <angular_velocity>
@@ -408,7 +402,6 @@
           <y><noise type="gaussian"><mean>0</mean><stddev>0</stddev></noise></y>
           <z><noise type="gaussian"><mean>0</mean><stddev>0</stddev></noise></z>
         </linear_acceleration>
->>>>>>> origin
       </imu>
     </sensor>
   </gazebo>
@@ -418,13 +411,6 @@
        ========================================================= -->
   <xacro:include filename="camera.xacro"/>
 
-<<<<<<< HEAD
-  <xacro:realsense name="front_camera" parent="chassis">
-    <origin xyz="0.36 0 0.39" rpy="0 ${pi/4} 0"/>
-  </xacro:realsense>
-
-=======
->>>>>>> origin
   <link name="top_camera_holder_link">
     <visual>
       <geometry><cylinder radius="0.04" length="0.04"/></geometry>
@@ -436,19 +422,10 @@
     </inertial>
   </link>
 
-<<<<<<< HEAD
-  <joint name="top_camera_holder_joint" type="continuous">
-    <parent link="chassis"/>
-    <child link="top_camera_holder_link"/>
-    <origin xyz="0.36 0 0.45" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
-    <dynamics damping="0.1"/>
-=======
   <joint name="top_camera_holder_joint" type="fixed">
     <parent link="chassis"/>
     <child link="top_camera_holder_link"/>
     <origin xyz="0.36 0 0.45" rpy="0 0 0"/>
->>>>>>> origin
   </joint>
 
   <xacro:realsense name="top_camera" parent="top_camera_holder_link">

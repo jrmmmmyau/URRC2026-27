@@ -42,12 +42,6 @@ Driver::Driver() : Node("driver") {
       "/cmd_vel/rl_wheel", 10);
   rr_wheel_pub_ = create_publisher<std_msgs::msg::Float64>(
       "/cmd_vel/rr_wheel", 10);
-<<<<<<< HEAD
-  camera_vel_pub_ = create_publisher<std_msgs::msg::Float64>(
-      "/cmd_vel/camera", 10);
-
-=======
->>>>>>> origin
   timer_ = create_wall_timer(
       std::chrono::milliseconds(20),
       std::bind(&Driver::publish_commands, this));

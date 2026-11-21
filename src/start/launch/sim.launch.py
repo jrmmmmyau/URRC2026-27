@@ -22,14 +22,8 @@ def generate_launch_description():
         executable='robot_state_publisher',
         output='screen',
         parameters=[{
-<<<<<<< HEAD:src/start/launch/teleop.launch.py
-            'robot_description': ParameterValue(
-                Command(['xacro ', urdf_path]), value_type=str
-            ),
-=======
             'robot_description': ParameterValue(Command(['xacro ', urdf_path]), value_type=str),
             'use_sim_time': True,
->>>>>>> origin:src/start/launch/sim.launch.py
         }]
     )
     
@@ -57,15 +51,10 @@ def generate_launch_description():
             '/cmd_vel/fr_wheel@std_msgs/msg/Float64]gz.msgs.Double',
             '/cmd_vel/rl_wheel@std_msgs/msg/Float64]gz.msgs.Double',
             '/cmd_vel/rr_wheel@std_msgs/msg/Float64]gz.msgs.Double',
-<<<<<<< HEAD:src/start/launch/teleop.launch.py
-            '/cmd_vel/camera@std_msgs/msg/Float64]gz.msgs.Double',
-            '/world/lunabotics_arena/model/melbot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model',
-=======
             '/world/empty/model/melbot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model',
             '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/cmd_vel/camera@std_msgs/msg/Float64]gz.msgs.Double',
->>>>>>> origin:src/start/launch/sim.launch.py
         ],
         remappings=[
             ('/world/empty/model/melbot/joint_state', '/joint_states'),
