@@ -1,21 +1,24 @@
+# include <cmath>
+# include <memory>
+# include <stdexcept>
 # include <string>
 # include <unordered_map>
 # include <vector>
 # include "rclcpp/rclcpp.hpp"
-# include "apriltag_msgs/msg/april_tag_detection_array.hpp"
+# include "perception/msg/tag_observation_array.hpp"
 # include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 # include "tf2/LinearMath/Quaternion.h"
 # include "tf2/LinearMath/Transform.h"
 # include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
-# include "tf2_ros/buffer.h"
-# include "tf2_ros/transform_listener.h"
 
 class TagLocalizer : public rclcpp::Node{
 public:
     TagLocalizer() : Node("tag_localizer"){
         map_frame_ = declare_parameter<std::string>("map_frame", "map");
         base_frame_ = declare_parameter<std::string>("base_frame", "base_link");
-        tag_prefix_ = declare_parameter<std::string>("tag_frame_prefix", "tag36h11:");
+        if (base_frame_.empty()) {
+            throw std::invalid_argument("Set base_frame to the expected tag observation frame.");
+        }
         
 
         const double pos_std = declare_parameter<double>("position_stddev", 0.05);  // meters sd
@@ -49,41 +52,29 @@ public:
         }
         RCLCPP_INFO(get_logger(), "Loaded %zu tag(s) into the map.", n);  // %zu = print a size
 
-        tf_buffer_ = std::make_unique<tf2_ros::Buffer>(get_clock());
-        tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_); //subscribes to /tf and /tf_static in the background and fills the buffer
-
-        sub_ = create_subscription<apriltag_msgs::msg::AprilTagDetectionArray>(
-            "detections", 10,
-            [this](const apriltag_msgs::msg::AprilTagDetectionArray::SharedPtr msg) {on_detections(msg);
+        sub_ = create_subscription<perception::msg::TagObservationArray>(
+            "tag/observations", 10,
+            [this](perception::msg::TagObservationArray::ConstSharedPtr msg) {on_observations(msg);
             });
         pub_ = create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped> ("tag_pose",10);
     }
 private:
-    void on_detections(const apriltag_msgs::msg::AprilTagDetectionArray::SharedPtr msg){
-        for (const auto & det:msg->detections){
-            const auto it = tag_in_map_.find(det.id); // find id
+    void on_observations(const perception::msg::TagObservationArray::ConstSharedPtr msg){
+        if (msg->header.frame_id != base_frame_) {
+            RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
+                "Ignoring tag observations in frame %s; expected %s.",
+                msg->header.frame_id.c_str(), base_frame_.c_str());
+            return;
+        }
+        for (const auto & observation:msg->observations){
+            const auto it = tag_in_map_.find(observation.id); // find id
             if (it == tag_in_map_.end()) {
                 continue;  // to the next detection
                 }
             
             const tf2::Transform & map_to_tag = it->second; // first is id itself, second is stored value
-            const std::string tag_frame = tag_prefix_ + std::to_string(det.id); // build frame name
-            
-            geometry_msgs::msg::TransformStamped base_to_tag_msg;  // will hold the answer
-            
-            try {
-                base_to_tag_msg = tf_buffer_->lookupTransform(
-                    base_frame_, tag_frame, rclcpp::Time(msg->header.stamp),
-                    rclcpp::Duration::from_seconds(0.1));} 
-                
-            catch (const tf2::TransformException & ex) {
-                RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000, "Can't look up %s -> %s: %s", 
-                base_frame_.c_str(), tag_frame.c_str(), ex.what()); // print this at most once every 2000 ms so terminal isn't flooded at 30 frames per second.
-                continue;  // skip this tag, try the next
-            }
-
             tf2::Transform base_to_tag;
-            tf2::fromMsg(base_to_tag_msg.transform, base_to_tag);
+            tf2::fromMsg(observation.transform, base_to_tag);
             
             const tf2::Transform map_to_base = map_to_tag * base_to_tag.inverse();
 
@@ -116,13 +107,11 @@ private:
         }
     }
 
-    std::string map_frame_, base_frame_, tag_prefix_; // take readings from .yaml
+    std::string map_frame_, base_frame_; // take readings from .yaml
     double pos_var_{0.0}, ang_var_{0.0};
 
     std::unordered_map<int64_t, tf2::Transform> tag_in_map_;
-    std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
-    std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
-    rclcpp::Subscription<apriltag_msgs::msg::AprilTagDetectionArray>::SharedPtr sub_;
+    rclcpp::Subscription<perception::msg::TagObservationArray>::SharedPtr sub_;
     rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pub_;
     double move_threshold_; // meters
     geometry_msgs::msg::PoseWithCovarianceStamped last_pose_; // Store the last published pose

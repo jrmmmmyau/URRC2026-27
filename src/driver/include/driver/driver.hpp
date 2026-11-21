@@ -1,5 +1,8 @@
 #pragma once
 
+#include <array>
+#include <chrono>
+
 #include "geometry_msgs/msg/twist.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
@@ -17,7 +20,9 @@ private:
   void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
   void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr msg);
   void publish_commands();
-  bool wheels_are_aligned() const;
+  bool wheels_are_aligned(double tolerance) const;
+  bool feedback_is_fresh() const;
+  bool wheels_are_stopped() const;
 
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
@@ -43,12 +48,25 @@ private:
   double rl_target_ = 0.0;
   double rr_target_ = 0.0;
 
-  double fl_speed_ = 0.0;
-  double fr_speed_ = 0.0;
-  double rl_speed_ = 0.0;
-  double rr_speed_ = 0.0;
+  double fl_speed_cmd_ = 0.0;
+  double fr_speed_cmd_ = 0.0;
+  double rl_speed_cmd_ = 0.0;
+  double rr_speed_cmd_ = 0.0;
 
-  bool received_joint_state_ = false;
+  double fl_speed_actual_ = 0.0;
+  double fr_speed_actual_ = 0.0;
+  double rl_speed_actual_ = 0.0;
+  double rr_speed_actual_ = 0.0;
+
+  double fl_applied_target_ = 0.0;
+  double fr_applied_target_ = 0.0;
+  double rl_applied_target_ = 0.0;
+  double rr_applied_target_ = 0.0;
+
+  enum class Transition { BRAKING, STEERING, DRIVING };
+  Transition transition_ = Transition::BRAKING;
+  // Four steering positions and four wheel velocities are tracked by the callback.
+  std::array<std::chrono::steady_clock::time_point, 8> feedback_times_{};
 };
 
 }  // namespace driver

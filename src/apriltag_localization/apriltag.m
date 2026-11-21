@@ -9,7 +9,7 @@ figure
 surface([x(:)'; x(:)'], [y(:)'; y(:)'], [z(:)'; z(:)'], ...
         [t(:)'; t(:)'], 'EdgeColor','interp', ...
         'FaceColor','none', 'LineWidth',2)
-
+clim([0 max(t)])
 xlabel("Position x")
 ylabel("Position y")
 zlabel("Position z")
