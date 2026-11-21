@@ -34,14 +34,6 @@ ros2 launch start apriltag_test.launch.py
 
 Run this separately from nav_odom.py: both start simulation. AprilTag pose is not yet connected to navigation.
 
-## Depth perception only
-
-Requires depth images and matching calibration already publishing. The AprilTag test launch disables depth.
-
-```bash
-ros2 launch perception depth_observation.launch.py
-```
-
 ## View node connections
 
 ```bash
@@ -49,3 +41,5 @@ ros2 run rqt_graph rqt_graph
 ```
 
 Full ROS build and live execution still need verification on the ROS machine.
+
+<!-- control shift v to open viewer -->

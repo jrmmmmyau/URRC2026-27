@@ -26,17 +26,13 @@ ament_target_dependencies(tag_observer rclcpp apriltag_msgs geometry_msgs std_ms
 rosidl_get_typesupport_target(tag_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
 target_link_libraries(tag_observer "${tag_typesupport_target}")
 
-add_executable(depth_observer src/depth_observer.cpp)
-target_compile_features(depth_observer PRIVATE cxx_std_17)
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  target_compile_options(depth_observer PRIVATE -Wall -Wextra -Wpedantic)
   target_compile_options(tag_observer PRIVATE -Wall -Wextra -Wpedantic)
 endif()
-target_include_directories(depth_observer PRIVATE include ${OpenCV_INCLUDE_DIRS})
-ament_target_dependencies(depth_observer rclcpp sensor_msgs cv_bridge)
-target_link_libraries(depth_observer ${OpenCV_LIBRARIES})
 
-install(TARGETS depth_observer tag_observer DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS tag_observer DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY include/ DESTINATION include)
 
 install(
