@@ -10,9 +10,12 @@ from launch.substitutions import LaunchConfiguration
 def generate_launch_description():
     start_share = get_package_share_directory('start')
     camera_share = get_package_share_directory('realsense2_camera')
+    perception_share = get_package_share_directory('perception')
     apriltag_share = get_package_share_directory('apriltag_localization')
 
     return LaunchDescription([
+        DeclareLaunchArgument('base_frame', default_value='base_link'),
+        DeclareLaunchArgument('observations_topic', default_value='/perception/tag/observations'),
         DeclareLaunchArgument(
             'color_profile',
             default_value='848x480x30',
@@ -37,7 +40,27 @@ def generate_launch_description():
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
+                os.path.join(
+                    perception_share, 'launch', 'apriltag_detection.launch.py'
+                )
+            ),
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(perception_share, 'launch', 'tag_observation.launch.py')
+            ),
+            launch_arguments={
+                'base_frame': LaunchConfiguration('base_frame'),
+                'observations_topic': LaunchConfiguration('observations_topic'),
+            }.items(),
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
                 os.path.join(apriltag_share, 'launch', 'apriltag.launch.py')
             ),
+            launch_arguments={
+                'base_frame': LaunchConfiguration('base_frame'),
+                'observations_topic': LaunchConfiguration('observations_topic'),
+            }.items(),
         ),
     ])

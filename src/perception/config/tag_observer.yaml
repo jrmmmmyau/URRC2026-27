@@ -1,0 +1,5 @@
+tag_observer:
+  ros__parameters:
+    output_frame: base_link
+    tag_frame_prefix: tag_
+    tf_timeout: 0.1

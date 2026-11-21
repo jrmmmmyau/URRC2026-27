@@ -1,65 +1,32 @@
 import os
+
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
-
-    
-    config=os.path.join(
-        get_package_share_directory('apriltag_localization'),'config','apriltag.yaml'
+    config = os.path.join(
+        get_package_share_directory('apriltag_localization'),
+        'config',
+        'localization.yaml',
     )
 
     return LaunchDescription([
-        Node(
-            package='image_proc',
-            executable='rectify_node',
-            remappings=[('image', '/camera/top_camera/color/image_raw'),
-                        ('camera_info', '/camera/top_camera/color/camera_info'),],
-            arguments=['--ros-args', '--log-level', 'error'],
-        ),
-        
-        Node(
-            package='apriltag_ros',
-            executable='apriltag_node',
-            parameters=[config],
-            remappings=[('image_rect', '/image_rect'),
-                        ('camera_info', '/camera/top_camera/color/camera_info'),],
-            arguments=['--ros-args', '--log-level', 'error'],
-        ),
-        # Node(
-        #     package='tf2_ros',
-        #     executable='static_transform_publisher',
-        #     name='camera_mount_tf',
-        #     arguments= ['--x', '0.3',
-        #                 '--y', '0.0', 
-        #                 '--z', '0.5',
-        #                 '--yaw', '0.0', 
-        #                 '--pitch', '0.0', 
-        #                 '--roll', '0.0',
-        #                 '--frame-id',
-        #                 'base_link',
-        #                 '--child-frame-id', 
-        #                 'camera_link']),
+        DeclareLaunchArgument('base_frame', default_value='base_link'),
+        DeclareLaunchArgument('observations_topic', default_value='/perception/tag/observations'),
+        DeclareLaunchArgument('use_sim_time', default_value='false'),
         Node(
             package='apriltag_localization',
             executable='tag_localizer',
-            parameters=[{
-                'map_frame': 'map',
-                'base_frame': 'base_link',
-                'tag_frame_prefix': 'tag_',
-                'position_stddev': 0.05,
-                'angle_stddev': 0.05,
-
-                # Where each tag is on the field (change)
-                'tag_ids':   [0],
-                'tag_x':     [0.0],
-                'tag_y':     [0.0],
-                'tag_z':     [0.0],
-                'tag_roll':  [-1.5708], # 90 degree
-                'tag_pitch': [0.0],
-                'tag_yaw':   [-1.5708],
+            name='tag_localizer',
+            parameters=[config, {
+                'base_frame': ParameterValue(LaunchConfiguration('base_frame'), value_type=str),
+                'use_sim_time': ParameterValue(LaunchConfiguration('use_sim_time'), value_type=bool),
             }],
+            remappings=[('tag/observations', LaunchConfiguration('observations_topic'))],
         ),
     ])

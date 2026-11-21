@@ -4,7 +4,7 @@
 
   <name>apriltag_localization</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Estimate robot pose from AprilTag observations and known field tag locations.</description>
   <maintainer email="jdai42765@gmai.com">jessica</maintainer>
   <license>BSD-3-Clause</license>
 
@@ -22,18 +22,13 @@
   <exec_depend>rosidl_default_runtime</exec_depend>
 
 
-  <depend>rclcpp</depend>
-  <depend>rclpy</depend>
-  <depend>apriltag_ros</depend>
-  <depend>apriltag_msgs</depend>
-  <depend>image_proc</depend>
-  <depend>image_view</depend>
-  <depend>geometry_msgs</depend>
-  <depend>tf2_ros</depend>
-  <depend>launch_ros</depend>
-  <depend>tf2</depend>
+  <depend>perception</depend>
   <depend>tf2_geometry_msgs</depend>
- 
+
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 
