@@ -5,6 +5,9 @@
 #include <rviz_common/properties/property.hpp>
 #include <rviz_common/view_manager.hpp>
 #include <rviz_rendering/render_window.hpp>
+#include <rviz_common/render_panel.hpp>
+#include <rviz_common/visualization_manager.hpp>
+#include <QApplication>
 
 #include <rviz_common/ros_integration/ros_node_abstraction.hpp>
 #include <cv_bridge/cv_bridge.hpp>
@@ -135,13 +138,13 @@ MainPanel::MainPanel(QWidget * parent)
     auto* center_layout = new QVBoxLayout();
 
     // rviz render panel
-   /* map_view_ = new rviz_common::RenderPanel(this);
+    map_view_ = new rviz_common::RenderPanel(this);
     
     map_view_->setMinimumSize(300, 300);
     map_view_->setSizePolicy(
         QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    center_layout->addWidget(map_view_); */
+    center_layout->addWidget(map_view_);
 
     // right column (more buttons idk what yet, probably some click to nav)
     auto* right_layout = new QVBoxLayout();
@@ -161,12 +164,9 @@ void MainPanel::onInitialize()
 {
     auto logger = rclcpp::get_logger("MainPanel");
 
-    RCLCPP_INFO(logger, "1. onInitialize started");
-
     // Get the parent RViz ROS node
     node_ptr_ = getDisplayContext()->getRosNodeAbstraction().lock();
 
-    RCLCPP_INFO(logger, "2. Got ROS node abstraction");
 
     if (!node_ptr_) {
         RCLCPP_ERROR(logger, "Failed to get ROS node abstraction");
@@ -175,7 +175,6 @@ void MainPanel::onInitialize()
 
     auto node = node_ptr_->get_raw_node();
 
-    RCLCPP_INFO(logger, "3. Got raw node");
 
     // Camera subscription uses the ORIGINAL RViz node
     image_sub_ = node->create_subscription<sensor_msgs::msg::Image>(
@@ -208,87 +207,70 @@ void MainPanel::onInitialize()
         )
     );
 
+    // initialize the embedded render window
+    QApplication::processEvents();
+    RCLCPP_INFO(logger, "A. Initializing embedded RViz render window");
+    map_view_->getRenderWindow()->initialize();
+    RCLCPP_INFO(logger, "B. Embedded RViz render window initialized");
 
-    // Initialize the embedded render window
-    /* map_view_->getRenderWindow()->initialize();
+    // new node bc keep getting seg faults
+    rviz_node_ptr_ = std::make_shared<rviz_common::ros_integration::RosNodeAbstraction>(
+        "embedded_map_rviz"
+    );
 
-    RCLCPP_INFO(logger, "4. Render window initialized");
+    rviz_manager_ = std::make_unique<rviz_common::VisualizationManager>(
+        map_view_,
+        rviz_node_ptr_,
+        nullptr,
+        rviz_node_ptr_->get_raw_node()->get_clock()
+    );
 
-    // Create a SEPARATE ROS node for the embedded RViz instance
-    rviz_node_ptr =
-        std::make_shared<rviz_common::ros_integration::RosNodeAbstraction>(
-            "embedded_map_rviz");
-
-    RCLCPP_INFO(logger, "5. Created separate ROS node");
-
-    // Create the embedded VisualizationManager
-    rviz_manager_ =
-        std::make_unique<rviz_common::VisualizationManager>(
-            map_view_,
-            rviz_node_ptr,
-            nullptr,
-            rviz_node_ptr->get_raw_node()->get_clock());
-
-    RCLCPP_INFO(logger, "6. Created visualization manager");
-
-    // Initialize the render panel
+    RCLCPP_INFO(logger, "C. Embedded RViz VisualizationManager initializing");
     map_view_->initialize(rviz_manager_.get());
-
-    RCLCPP_INFO(logger, "7. Initialized render panel");
-
-    // Initialize and start the manager
     rviz_manager_->initialize();
+    RCLCPP_INFO(logger, "D. Embedded RViz VisualizationManager initialized");
 
-    RCLCPP_INFO(logger, "8. Initialized visualization manager");
+    // test 5004334 
+    rviz_manager_->setFixedFrame("camera_depth_optical_frame");
+    rviz_common::Display* grid_display = rviz_manager_->createDisplay(
+        "rviz_default_plugins/Grid",
+        "Reference Grid",
+        true
+    );
+
+    if (!grid_display) {
+        RCLCPP_ERROR(logger, "Failed to create grid display");
+        return;
+    }
+
+    rviz_common::Display* map_display = rviz_manager_->createDisplay(
+        "rviz_default_plugins/Map",
+        "Occupancy Grid",
+        true
+    );
+
+    if (!map_display) {
+        RCLCPP_ERROR(logger, "Failed to create occupancy grid display");
+        return;
+    } 
 
     rviz_manager_->startUpdate();
 
-    RCLCPP_INFO(logger, "9. Started visualization manager");
-
-
-    // Set map frames
-    rviz_manager_->setFixedFrame("camera_depth_optical_frame");
-
-    RCLCPP_INFO(logger, "10. Set fixed frame");
-
-    // Create map display
-    rviz_common::Display * map_display =
-        rviz_manager_->createDisplay(
-            "rviz_default_plugins/Map",
-            "Occupancy Grid",
-            true);
-
-    RCLCPP_INFO(logger, "11. Created map display");
-
-    if (map_display) {
-        auto* topic_property = map_display->subProp("Topic");
-
-        if (topic_property) {
-            topic_property->setValue("/occupancy_grid");
-        }
-    } else {
-        RCLCPP_ERROR(
-            node->get_logger(),
-            "Failed to create occupancy grid");
-    }
-
-    RCLCPP_INFO(logger, "12. Finished onInitialize"); */
 }
 
 // Callback function for image subscription
 void MainPanel::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr msg)
 {
+    
     try
     {
         // convert ros image to open cv bgr image
         auto cv_image = cv_bridge::toCvCopy(
-            msg, sensor_msgs::image_encodings::BGR8
+            msg, sensor_msgs::image_encodings::RGB8
         );
 
         // convert bgr to rgb
-        cv::Mat rgb_image;
-
-        cv::cvtColor(cv_image->image, rgb_image, cv::COLOR_BGR2RGB);
+        cv::Mat rgb_image = cv_image->image;
 
         // convert open cv image to qt image
         QImage qt_image(
@@ -316,7 +298,8 @@ void MainPanel::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr msg)
     }
     catch (const cv_bridge::Exception& e)
     {
-        RCLCPP_ERROR(node_ptr_->get_raw_node()->get_logger(), "cv_bridge exception: %s", e.what());
+        RCLCPP_ERROR(node_ptr_->get_raw_node()->get_logger(), 
+        "main panel image callback error: %s", e.what());
     }
 }
 

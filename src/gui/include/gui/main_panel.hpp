@@ -38,7 +38,7 @@ private:
     std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> node_ptr_;
     
      // Separate ROS node for the embedded RViz instance
-    std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> rviz_node_ptr;
+    std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> rviz_node_ptr_;
 
     //embedded rviz
     rviz_common::RenderPanel * map_view_;
