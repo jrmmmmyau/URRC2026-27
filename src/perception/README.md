@@ -23,13 +23,3 @@ ros2 launch perception apriltag_detection.launch.py
 ros2 launch perception tag_observation.launch.py
 ros2 launch apriltag_localization apriltag.launch.py
 ```
-
-## Depth observations
-
-Requires a camera publishing depth images and matching camera calibration:
-
-```bash
-ros2 launch perception depth_observation.launch.py
-```
-
-Depth output is `/perception/depth/points` in the camera optical frame. It does not build or update a navigation map.

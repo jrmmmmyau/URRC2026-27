@@ -40,12 +40,4 @@ Choose `1` to `6` or `large`:
 ros2 launch start terrain_teleop.launch.py world:=large
 ```
 
-## Standalone depth observations
-
-Requires a camera publishing depth and camera-info topics:
-
-```bash
-ros2 launch perception depth_observation.launch.py
-```
-
 Full ROS/Gazebo execution must be checked on the Ubuntu Jazzy machine.

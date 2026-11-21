@@ -54,7 +54,6 @@ def generate_launch_description():
             '/world/empty/model/melbot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model',
             '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-            '/cmd_vel/camera@std_msgs/msg/Float64]gz.msgs.Double',
         ],
         remappings=[
             ('/world/empty/model/melbot/joint_state', '/joint_states'),
