@@ -10,10 +10,12 @@ find_package(ament_cmake REQUIRED)
 find_package(rviz_rendering REQUIRED)
 find_package(rviz_default_plugins REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rviz_common REQUIRED)
 find_package(pluginlib REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Core Widgets Gui)
 
@@ -33,12 +35,14 @@ target_include_directories(gui PUBLIC
 
 ament_target_dependencies(gui
   rclcpp
+  nav_msgs
   sensor_msgs
   cv_bridge
   rviz_common
   rviz_rendering
   rviz_default_plugins
   pluginlib
+  rcl_interfaces
 )
 
 target_link_libraries(gui

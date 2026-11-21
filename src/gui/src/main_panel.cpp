@@ -70,6 +70,65 @@ MainPanel::MainPanel(QWidget * parent)
     pose_layout->addWidget(pose_view_);
 
     left_layout->addWidget(pose_frame);
+
+    // Current stage frame
+    auto* stage_frame = new QFrame(this);
+    stage_frame->setFixedHeight(65);
+    stage_frame->setFrameShape(QFrame::StyledPanel);
+    stage_frame->setStyleSheet(
+        "QFrame { background-color: #333; border: 1px solid gray; }"
+    );
+
+    auto* stage_layout = new QVBoxLayout(stage_frame);
+
+    auto* stage_title = new QLabel("Current Stage", stage_frame);
+    stage_title->setStyleSheet(
+        "font-weight: bold; color: white; border: none; font-size: 11px;"
+    );
+
+    stage_view_ = new QLabel("", stage_frame);
+    stage_view_->setStyleSheet(
+        "color: white; border: none; font-size: 11px;"
+    );
+
+    stage_layout->addWidget(stage_title);
+    stage_layout->addWidget(stage_view_);
+
+    left_layout->addWidget(stage_frame);
+
+    // Robot status frame
+    auto* status_frame = new QFrame(this);
+    status_frame->setFrameShape(QFrame::StyledPanel);
+    status_frame->setStyleSheet(
+        "QFrame { background-color: #333; border: 1px solid gray; }"
+    );
+
+    auto* status_layout = new QVBoxLayout(status_frame);
+
+    auto* status_title = new QLabel("Robot Status", status_frame);
+    status_title->setStyleSheet(
+        "font-weight: bold; color: white; border: none; font-size: 11px;"
+    );
+
+    status_view_ = new QPlainTextEdit(status_frame);
+    status_view_->setReadOnly(true);
+    status_view_->setMaximumBlockCount(100);
+    status_view_->setPlaceholderText("Waiting for robot messages...");
+
+    status_view_->setStyleSheet(
+        "QPlainTextEdit {"
+        "background-color: #222;"
+        "color: white;"
+        "border: none;"
+        "font-size: 10px;"
+        "}"
+    );
+
+    status_layout->addWidget(status_title);
+    status_layout->addWidget(status_view_);
+
+    left_layout->addWidget(status_frame, 1);
+
     left_layout->addStretch(2);
 
     // center column (only the map)
@@ -137,6 +196,18 @@ void MainPanel::onInitialize()
             std::placeholders::_1
         )
     );
+
+    // Subscribe to ROS logs
+    log_sub_ = node->create_subscription<rcl_interfaces::msg::Log>(
+        "/rosout",
+        rclcpp::QoS(100),
+        std::bind(
+            &MainPanel::logCallback,
+            this,
+            std::placeholders::_1
+        )
+    );
+
 
     // Initialize the embedded render window
     /* map_view_->getRenderWindow()->initialize();
@@ -266,7 +337,7 @@ void MainPanel::odomCallback(const nav_msgs::msg::Odometry::ConstSharedPtr msg)
         pose_view_,
         [this, x, y, heading]() {
             pose_view_->setText(
-                QString("X: %1 m\nY: %2 m\nHeading: %3")
+                QString("X: %1 m\nY: %2 m\nHeading: %3 deg")
                     .arg(x, 0, 'f', 2)
                     .arg(y, 0, 'f', 2)
                     .arg(heading, 0, 'f', 1)
@@ -275,6 +346,53 @@ void MainPanel::odomCallback(const nav_msgs::msg::Odometry::ConstSharedPtr msg)
         Qt::QueuedConnection
     );
 }
+
+void MainPanel::logCallback(
+    const rcl_interfaces::msg::Log::ConstSharedPtr msg)
+{
+    QString level;
+
+    switch (msg->level)
+    {
+        case rcl_interfaces::msg::Log::DEBUG:
+            level = "DEBUG";
+            break;
+
+        case rcl_interfaces::msg::Log::INFO:
+            level = "INFO";
+            break;
+
+        case rcl_interfaces::msg::Log::WARN:
+            level = "WARN";
+            break;
+
+        case rcl_interfaces::msg::Log::ERROR:
+            level = "ERROR";
+            break;
+
+        case rcl_interfaces::msg::Log::FATAL:
+            level = "FATAL";
+            break;
+
+        default:
+            level = "UNKNOWN";
+            break;
+    }
+
+    QString log_message = QString("[%1] %2: %3")
+        .arg(level)
+        .arg(QString::fromStdString(msg->name))
+        .arg(QString::fromStdString(msg->msg));
+
+    QMetaObject::invokeMethod(
+        status_view_,
+        [this, log_message]() {
+            status_view_->appendPlainText(log_message);
+        },
+        Qt::QueuedConnection
+    );
+}
+
 
 } // namespace gui
 

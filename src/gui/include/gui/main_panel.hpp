@@ -6,6 +6,8 @@
 #include <rviz_common/panel.hpp>
 #include <rviz_common/render_panel.hpp>
 #include <rviz_common/visualization_manager.hpp>
+#include <QPlainTextEdit>
+#include <rcl_interfaces/msg/log.hpp>
 
 #include <rviz_common/ros_integration/ros_node_abstraction.hpp>
 #include <rviz_common/ros_integration/ros_node_abstraction_iface.hpp>
@@ -52,6 +54,15 @@ private:
     QLabel * pose_view_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
     void odomCallback(const nav_msgs::msg::Odometry::ConstSharedPtr msg);
+
+    // Current stage
+    QLabel * stage_view_;
+
+    // Robot status / ROS logs
+    QPlainTextEdit * status_view_;
+    rclcpp::Subscription<rcl_interfaces::msg::Log>::SharedPtr log_sub_;
+    void logCallback(const rcl_interfaces::msg::Log::ConstSharedPtr msg);
+
 };
 }  // namespace gui
 
