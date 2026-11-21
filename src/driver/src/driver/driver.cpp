@@ -308,6 +308,10 @@ void Driver::publish_commands() {
   fr_wheel_pub_->publish(fr_wheel);
   rl_wheel_pub_->publish(rl_wheel);
   rr_wheel_pub_->publish(rr_wheel);
+
+  std_msgs::msg::Float64 camera_msg;
+  camera_msg.data = 1.0;
+  camera_vel_pub_->publish(camera_msg);
 }
 
 }  // namespace driver

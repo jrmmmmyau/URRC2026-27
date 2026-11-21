@@ -1,27 +1,18 @@
-# Navigation Server
+# Navigation Commands
 
-## Purpose
-This node plans a path for the Lunabotics robot using A*.
+Build and source from the repository root:
 
-## Inputs
-- Start pose
-- Goal pose
-- Occupancy grid
+```bash
+source /opt/ros/jazzy/setup.bash
+colcon build --base-paths src --packages-up-to navigation_server start
+source install/setup.bash
+```
 
-## Outputs
-- nav_msgs/Path
-- waypoints
-- bool if its making a path or not
+Run in separate terminals. The map publisher is interactive; type `help` for map and goal commands:
 
-## A* Behavior
-- 8-connected movement
-- Diagonal movement costs sqrt(2)
-- Euclidean heuristic
-- Turning penalty
-- Obstacle proximity cost
+```bash
+ros2 launch start nav_odom.py
+ros2 run navigation_server test_map_publisher
+```
 
-## future
-- publishes whether or not its making a new path
-- when recieving a new map, consider whether or not it is different enough along the path to warrant a reroute
-- recieve an input of where the bot currently is, so if we make a new path it starts where the robot is.
-- factor in passability, because the obstacles wont be black and white they will be 0-256 (add threshold for not caring)
+Navigation currently uses authored test maps; the perception package does not create or update `/map`.
