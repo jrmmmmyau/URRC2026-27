@@ -1,0 +1,16 @@
+tag_localizer:
+  ros__parameters:
+    map_frame: map
+    base_frame: base_link
+    position_stddev: 0.05
+    angle_stddev: 0.05
+    move_threshold: 0.1
+
+    # Known tag positions in the field; translations are meters, angles radians.
+    tag_ids: [0]
+    tag_x: [0.0]
+    tag_y: [0.0]
+    tag_z: [0.0]
+    tag_roll: [-1.5708]
+    tag_pitch: [0.0]
+    tag_yaw: [-1.5708]

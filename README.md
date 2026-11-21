@@ -1,28 +1,29 @@
-# URRC 2026–27 Gazebo Simulation
+# URRC 2026-27 Autonomy
 
-This repository contains the Melbot ROS 2 simulation and six Gazebo terrain variants based on the NASA Lunabotics arena.
+University of Rochester Robotics Club — Lunabotics autonomy stack.
 
-## Requirements
+See [RUN.md](RUN.md) for quick launch commands.
 
-- Ubuntu with ROS 2 Jazzy
-- Gazebo Harmonic and the ROS–Gazebo (`ros_gz`) packages
-- `colcon`
+## What's in here
 
-## First-time setup
+- `src/description/` — robot URDF and Gazebo model plugins
+- `src/driver/` — swerve-drive command and feedback node
+- `src/perception/` — image rectification, AprilTag detection, robot-relative tag observations, and depth observations
+- `src/apriltag_localization/` — robot pose estimation from tag observations and known field tag locations
+- `src/navigation_server/` — existing navigation and authored test-map tools
+- `src/start/` — launch files for starting simulation and the robot
+- `config/` — future parameter configs (Nav2, EKF, SLAM, etc.)
 
-Open a terminal in the repository and build the workspace:
+## Setup
 
-```bash
-cd ~/URRC2026-27
-source /opt/ros/jazzy/setup.bash
-colcon build --packages-up-to start
-source install/setup.bash
-```
+1. Ubuntu 24.04 (VM or native)
+2. ROS 2 Jazzy (`ros-jazzy-desktop`)
 
-## Launch a terrain world
+## AprilTag pipeline
 
-Choose a terrain using a number from `1` through `6`:
+The pipeline is split into perception and localization. Perception starts the image rectifier, AprilTag detector, and tag observer. The observer combines `/detections` with TF and publishes `/perception/tag/observations`. Localization consumes those prepared robot-relative observations and known field tag locations to publish `/tag_pose`.
 
+<<<<<<< HEAD
 ```bash
 ros2 launch start terrain_teleop.launch.py world:=1
 ```
@@ -117,52 +118,63 @@ Close any existing Gazebo window before launching again.
 ### `Package not found`
 
 Source ROS and then this workspace in the same terminal:
+=======
+With the declared ROS, Gazebo, and RealSense dependencies installed, build and run the existing combined test setup from the repository root:
+>>>>>>> origin
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-source ~/URRC2026-27/install/setup.bash
-ros2 pkg prefix description
-```
-
-The final command should print a path ending in `URRC2026-27/install/description`.
-
-### Gazebo still shows older terrain or missing rocks
-
-Rebuild the packages that install the worlds and launch files, then source the result:
-
-```bash
-cd ~/URRC2026-27
-colcon build --packages-select description start
+colcon build --base-paths src --packages-up-to start
 source install/setup.bash
+ros2 launch start apriltag_test.launch.py
 ```
 
-You can confirm that the current terrain asset is installed with:
+This entry point starts the simulation, the real camera's color stream, perception, and localization. It retains the existing camera settings and requires the RealSense camera. The simulation and real-camera time configuration still needs runtime validation.
+
+To run the processing components independently, start these commands in separate terminals after sourcing the ROS and workspace environments:
 
 ```bash
-grep '<size>6.88 5.00' install/description/share/description/worlds/lunabotics_terrain_01.sdf
+ros2 launch perception apriltag_detection.launch.py
+ros2 launch perception tag_observation.launch.py
+ros2 launch apriltag_localization apriltag.launch.py
 ```
 
-The output should contain:
+The independent launches require an existing camera input and the mounting TF needed by the perception tag observer. Choose either the combined entry point or the separate launches to avoid duplicate nodes.
 
-```xml
-<size>6.88 5.00 0.85</size>
-```
+**Launch behavior change:** `ros2 launch apriltag_localization apriltag.launch.py` now starts localization only. Use the `start` command above for the combined test setup.
 
-The heightfield size alone does not identify the rock-placement fix. Confirm
-the installed barrier also reaches the column:
+Detector settings are in `src/perception/config/apriltag.yaml`; tag-frame naming, output frame, and TF timeout belong in `src/perception/config/tag_observer.yaml`. Known field tag positions and localization settings remain in `src/apriltag_localization/config/localization.yaml`. The detector output and `/tag_pose` are preserved; localization now receives the new observation topic. It depends on perception's public message definitions, with no dependency on its private C++ implementation.
+
+Both observer and localization launches accept `base_frame`, `observations_topic`, and `use_sim_time`. Set them consistently; the combined launch forwards the same `base_frame` and `observations_topic` to both. Independent executable users must supply the equivalent topic remapping.
+
+
+See the [perception README](src/perception/README.md) for input topics, TF responsibilities, and validation limits.
+
+## Standalone depth perception
+
+Perception converts depth images into camera-coordinate observation points. The default output is `/perception/depth/points` (`sensor_msgs/msg/PointCloud2`), with FLOAT64 XYZ coordinates in meters and the image's timestamp and optical frame.
 
 ```bash
-grep 'rock_construction_7' install/description/share/description/worlds/lunabotics_terrain_01.sdf
+colcon build --base-paths src --packages-select perception
+source install/setup.bash
+ros2 launch perception depth_observation.launch.py
 ```
 
-Close and relaunch Gazebo after rebuilding; an open simulation does not reload
-changed world files. Terrain rocks must be placed in Gazebo's world-height
-frame (nominal grade 0.40 m), not the design-height frame (nominal grade 0 m).
+The camera must already publish depth images and matching calibration. Topic arguments are documented in the [perception README](src/perception/README.md). The existing AprilTag test setup still disables depth and does not start this node.
 
-### Invalid terrain number
+The imported mapping package and the subsequently added depth world-coordinate mode have been removed. Depth perception no longer receives `/tag_pose`, interpolates robot poses, or reads mounting TF. AprilTag perception still uses its existing tag/mounting TF relationships, and localization still publishes `/tag_pose`.
 
-The `world` argument only accepts the values `1`, `2`, `3`, `4`, `5`, and `6`.
+## Navigation with the existing test map
 
-## Map files
+There is no local or global mapping implementation supplied by this separation work. Navigation's existing `test_map_publisher` loads authored maps and publishes `/map`; perception does not update it. Keep the current fake-map workflow. After building and sourcing navigation in the target ROS environment, its existing instructions use separate terminals:
 
-Worlds, terrain assets, and generation scripts are organized under [`map/`](map/README.md). Regenerating the maps is not required just to launch the simulation.
+```bash
+ros2 launch navigation_server nav_test.launch.py
+ros2 run navigation_server test_map_publisher
+```
+
+The publisher accepts interactive input; type `help` for its commands. Navigation source, maps, settings, and launch files are unchanged. These commands describe the existing workflow, not a new runtime certification.
+
+## Validation status
+
+The optional synthetic test harnesses were removed at the user's request. Full ROS compilation, message generation, launch, and live camera checks remain pending. See [RUN.md](RUN.md) for commands and the [updated scope and plan](docs/perception_separation_plan.md) for task boundaries.
