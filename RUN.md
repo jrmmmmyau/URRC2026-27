@@ -40,4 +40,10 @@ Choose `1` to `6` or `large`:
 ros2 launch start terrain_teleop.launch.py world:=large
 ```
 
+In another sourced terminal, run the keyboard publisher on `/cmd_vel`:
+
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+```
+
 Full ROS/Gazebo execution must be checked on the Ubuntu Jazzy machine.

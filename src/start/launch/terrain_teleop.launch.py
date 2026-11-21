@@ -80,7 +80,9 @@ def launch_setup(context):
         output='screen',
     )
 
-    driver_node = Node(package='driver', executable='driver_node', output='screen')
+    driver_node = Node(
+        package='driver', executable='teleop_driver_node', output='screen'
+    )
 
     return [rsp_node, gazebo, spawn_node, bridge_node, driver_node]
 
