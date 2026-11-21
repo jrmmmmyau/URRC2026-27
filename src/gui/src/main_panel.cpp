@@ -246,7 +246,7 @@ void MainPanel::onInitialize()
     RCLCPP_INFO(logger, "9. Started visualization manager");
 
 
-    // Set map frame
+    // Set map frames
     rviz_manager_->setFixedFrame("camera_depth_optical_frame");
 
     RCLCPP_INFO(logger, "10. Set fixed frame");
