@@ -1,18 +1,20 @@
-# Lunabotics Gazebo maps
+# Terrain Maps
 
-The map package is organized by purpose:
+Build and source the workspace from the repository root, then launch a terrain:
 
-- `worlds/` contains launchable SDF worlds. `arena.sdf` is the original world,
-  moved here without content changes. The numbered files are six generated
-  terrain and obstacle-layout variants.
-- `assets/shared/` contains rocks and zone-label meshes used by every variant.
-- `assets/terrain_01/` through `terrain_06/` contain each world's matching
-  collision heightmap, render mesh, and texture maps.
-- `templates/` contains the common terrain-world SDF source.
-- `scripts/` contains deterministic asset and world generators.
-
-After building and sourcing the ROS workspace, launch a numbered variant:
-
-
+```bash
 ros2 launch start terrain_teleop.launch.py world:=1
-ros2 launch start terrain_teleop.launch.py world:=6
+ros2 launch start terrain_teleop.launch.py world:=large
+```
+
+Use `world:=1` through `world:=6` for the six standard terrains; `world:=large` loads the sparse 50 x 50 m testing terrain.
+
+Regenerate the standard maps and large map, then run geometry tests:
+
+```bash
+python3 map/scripts/generate_lunabotics_worlds.py
+python3 map/scripts/generate_large_terrain.py
+python3 -m unittest discover -s map/scripts -p 'test_*.py' -v
+```
+
+Worlds are in `worlds/`; shared and terrain assets are in `assets/`.

@@ -20,7 +20,9 @@ def launch_setup(context):
     urdf_path = os.path.join(description_share, 'urdf', 'basic_robot.urdf')
     large = variant == 'large'
     ws_root = os.path.abspath(os.path.join(get_package_share_directory('start'), '..', '..', '..', '..'))
-    world_path = os.path.join(ws_root, 'map', 'worlds', 'lunabotics_terrain_large.sdf')
+    world_file = ('lunabotics_terrain_large.sdf' if large
+                  else f'lunabotics_terrain_{int(variant):02d}.sdf')
+    world_path = os.path.join(ws_root, 'map', 'worlds', world_file)
     spawn = ('7.267441860465', '7.5', '1.65') if large else ('1.0', '0.75', '0.75')
     ros_gz_sim = get_package_share_directory('ros_gz_sim')
 

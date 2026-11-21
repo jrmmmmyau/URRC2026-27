@@ -46,7 +46,7 @@
         <collision name="terrain_collision">
           <geometry>
             <heightmap>
-              <uri>../terrain_01/heightmap.png</uri>
+              <uri>../assets/terrain_01/heightmap.png</uri>
               <size>50.000000000000 50.000000000000 2.200000000000</size>
               <sampling>1</sampling>
             </heightmap>
@@ -65,7 +65,7 @@
         <visual name="terrain_visual">
           <geometry>
             <mesh>
-              <uri>../terrain_01/terrain.obj</uri>
+              <uri>../assets/terrain_01/terrain.obj</uri>
               <scale>7.267441860465 10.000000000000 4.000000000000</scale>
             </mesh>
           </geometry>
@@ -368,7 +368,7 @@
           <pose>7.921511627907 13.100000000000 1.672000000000 0.000000000000 0.000000000000 0.000000000000</pose>
           <geometry>
             <mesh>
-              <uri>../shared/zone_labels/start.obj</uri>
+              <uri>../assets/shared/zone_labels/start.obj</uri>
               <scale>7.267441860465 10.000000000000 1.000000000000</scale>
             </mesh>
           </geometry>
@@ -382,7 +382,7 @@
           <pose>9.447674418605 46.000000000000 1.672000000000 0.000000000000 0.000000000000 0.000000000000</pose>
           <geometry>
             <mesh>
-              <uri>../shared/zone_labels/excavation.obj</uri>
+              <uri>../assets/shared/zone_labels/excavation.obj</uri>
               <scale>7.267441860465 10.000000000000 1.000000000000</scale>
             </mesh>
           </geometry>
@@ -396,7 +396,7 @@
           <pose>33.430232558140 46.000000000000 1.672000000000 0.000000000000 0.000000000000 0.000000000000</pose>
           <geometry>
             <mesh>
-              <uri>../shared/zone_labels/obstacle.obj</uri>
+              <uri>../assets/shared/zone_labels/obstacle.obj</uri>
               <scale>7.267441860465 10.000000000000 1.000000000000</scale>
             </mesh>
           </geometry>
@@ -410,7 +410,7 @@
           <pose>36.918604651163 12.900000000000 1.678000000000 0.000000000000 0.000000000000 0.000000000000</pose>
           <geometry>
             <mesh>
-              <uri>../shared/zone_labels/construction.obj</uri>
+              <uri>../assets/shared/zone_labels/construction.obj</uri>
               <scale>7.267441860465 10.000000000000 1.000000000000</scale>
             </mesh>
           </geometry>
@@ -424,7 +424,7 @@
           <pose>39.098837209302 5.600000000000 1.680000000000 0.000000000000 0.000000000000 0.000000000000</pose>
           <geometry>
             <mesh>
-              <uri>../shared/zone_labels/berm.obj</uri>
+              <uri>../assets/shared/zone_labels/berm.obj</uri>
               <scale>7.267441860465 10.000000000000 1.000000000000</scale>
             </mesh>
           </geometry>
@@ -671,7 +671,7 @@
         <visual name="visual">
           <geometry>
             <mesh>
-              <uri>../shared/lunar_rock.obj</uri>
+              <uri>../assets/shared/lunar_rock.obj</uri>
               <scale>2.345680000000 2.432430000000 1.230768000000</scale>
             </mesh>
           </geometry>
@@ -697,7 +697,7 @@
         <visual name="visual">
           <geometry>
             <mesh>
-              <uri>../shared/lunar_rock.obj</uri>
+              <uri>../assets/shared/lunar_rock.obj</uri>
               <scale>2.222220000000 2.364860000000 1.128204000000</scale>
             </mesh>
           </geometry>
@@ -723,7 +723,7 @@
         <visual name="visual">
           <geometry>
             <mesh>
-              <uri>../shared/lunar_rock.obj</uri>
+              <uri>../assets/shared/lunar_rock.obj</uri>
               <scale>2.469140000000 2.500000000000 1.435896000000</scale>
             </mesh>
           </geometry>
@@ -749,7 +749,7 @@
         <visual name="visual">
           <geometry>
             <mesh>
-              <uri>../shared/lunar_rock.obj</uri>
+              <uri>../assets/shared/lunar_rock.obj</uri>
               <scale>2.283950000000 2.432430000000 1.179488000000</scale>
             </mesh>
           </geometry>
@@ -775,7 +775,7 @@
         <visual name="visual">
           <geometry>
             <mesh>
-              <uri>../shared/lunar_rock.obj</uri>
+              <uri>../assets/shared/lunar_rock.obj</uri>
               <scale>2.407410000000 2.364860000000 1.333332000000</scale>
             </mesh>
           </geometry>
@@ -801,7 +801,7 @@
         <visual name="visual">
           <geometry>
             <mesh>
-              <uri>../shared/lunar_rock.obj</uri>
+              <uri>../assets/shared/lunar_rock.obj</uri>
               <scale>2.345680000000 2.432430000000 1.282052000000</scale>
             </mesh>
           </geometry>
@@ -827,7 +827,7 @@
         <visual name="visual">
           <geometry>
             <mesh>
-              <uri>../shared/lunar_rock.obj</uri>
+              <uri>../assets/shared/lunar_rock.obj</uri>
               <scale>2.469140000000 2.500000000000 1.384616000000</scale>
             </mesh>
           </geometry>
@@ -855,7 +855,7 @@
         <visual name="visual">
           <geometry>
             <mesh>
-              <uri>../shared/lunar_rock.obj</uri>
+              <uri>../assets/shared/lunar_rock.obj</uri>
               <scale>1.851850000000 1.824320000000 0.769232000000</scale>
             </mesh>
           </geometry>
@@ -881,7 +881,7 @@
         <visual name="visual">
           <geometry>
             <mesh>
-              <uri>../shared/lunar_rock.obj</uri>
+              <uri>../assets/shared/lunar_rock.obj</uri>
               <scale>2.160490000000 2.094590000000 1.025640000000</scale>
             </mesh>
           </geometry>
@@ -907,7 +907,7 @@
         <visual name="visual">
           <geometry>
             <mesh>
-              <uri>../shared/lunar_rock.obj</uri>
+              <uri>../assets/shared/lunar_rock.obj</uri>
               <scale>2.469140000000 2.364860000000 1.333332000000</scale>
             </mesh>
           </geometry>
@@ -933,7 +933,7 @@
         <visual name="visual">
           <geometry>
             <mesh>
-              <uri>../shared/lunar_rock.obj</uri>
+              <uri>../assets/shared/lunar_rock.obj</uri>
               <scale>1.975310000000 1.891890000000 0.871796000000</scale>
             </mesh>
           </geometry>
@@ -959,7 +959,7 @@
         <visual name="visual">
           <geometry>
             <mesh>
-              <uri>../shared/lunar_rock.obj</uri>
+              <uri>../assets/shared/lunar_rock.obj</uri>
               <scale>2.345680000000 2.229730000000 1.179488000000</scale>
             </mesh>
           </geometry>
@@ -985,7 +985,7 @@
         <visual name="visual">
           <geometry>
             <mesh>
-              <uri>../shared/lunar_rock.obj</uri>
+              <uri>../assets/shared/lunar_rock.obj</uri>
               <scale>2.098770000000 2.027030000000 0.974360000000</scale>
             </mesh>
           </geometry>
